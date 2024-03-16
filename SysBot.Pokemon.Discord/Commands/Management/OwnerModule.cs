@@ -147,7 +147,7 @@ public class OwnerModule<T> : SudoModule<T> where T : PKM, new()
 
     [Command("dm")]
     [Summary("Sends a direct message to a specified user.")]
-    [RequireOwner]
+    [RequireSudo]
     public async Task DMUserAsync(IUser user, [Remainder] string message)
     {
         var attachments = Context.Message.Attachments;
