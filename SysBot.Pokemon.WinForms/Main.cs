@@ -271,7 +271,7 @@ public sealed partial class Main : Form
                 FLP_Bots.BackgroundImage = null;
                 break;
         }
-        FLP_Bots.BackgroundImageLayout = ImageLayout.Center;
+        FLP_Bots.BackgroundImageLayout = ImageLayout.Stretch;
     }
 
     private void SendAll(BotControlCommand cmd)
