@@ -166,7 +166,7 @@ public sealed partial class Main : Form
                 ApplySylveonTheme();
                 break;
             default:
-                ApplyGengarTheme(); 
+                ApplyLightTheme(); 
                 break;
         }
 
@@ -427,7 +427,7 @@ public sealed partial class Main : Form
                     ApplySylveonTheme();
                     break;
                 default:
-                    ApplyGengarTheme();
+                    ApplyLightTheme();
                     break;
             }
         }
