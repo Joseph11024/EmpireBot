@@ -155,9 +155,9 @@ public class OwnerModule<T> : SudoModule<T> where T : PKM, new()
 
         var embed = new EmbedBuilder
         {
-            Title = "Private Message from the Bot Owner",
+            Title = "Private Message",
             Description = message,
-            Color = Color.Gold,
+            Color = Color.Blue,
             Timestamp = DateTimeOffset.Now,
             ThumbnailUrl = "https://raw.githubusercontent.com/bdawg1989/sprites/main/pikamail.png"
         };
