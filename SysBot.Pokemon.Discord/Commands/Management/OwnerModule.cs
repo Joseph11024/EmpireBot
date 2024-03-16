@@ -159,7 +159,7 @@ public class OwnerModule<T> : SudoModule<T> where T : PKM, new()
             Description = message,
             Color = Color.Blue,
             Timestamp = DateTimeOffset.Now,
-            ThumbnailUrl = "https://raw.githubusercontent.com/bdawg1989/sprites/main/pikamail.png"
+            ThumbnailUrl = "https://images.app.goo.gl/KK4N13D9TnhbpCZt5"
         };
 
         try
