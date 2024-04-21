@@ -318,7 +318,7 @@ public class OwnerModule<T> : SudoModule<T> where T : PKM, new()
         {
             Title = "A message from the rebellion",
             Description = message,
-            Color = (DiscordColor?)Color.Red,
+            Color = (DiscordColor?)Color.Green,
             Timestamp = DateTimeOffset.Now,
             ThumbnailUrl = "https://media.discordapp.net/attachments/1152944125818183681/1218757570131529778/BotDM.png?ex=6608d370&is=65f65e70&hm=02387a6f77502e166d62fc171cf50a8e92cfb6f610c522cae3ecc0a63ed9ba41&=&format=webp&quality=lossless&width=970&height=988"
         };
