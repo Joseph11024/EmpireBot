@@ -344,16 +344,29 @@ public sealed class SysCord<T> where T : PKM, new()
 
             var responses = new List<string>
         {
-            "You're welcome! ❤️",
-            "No problem at all!",
-            "Anytime, glad to help!",
-            "It's my pleasure! ❤️",
-            "Not a problem! You're welcome!",
-            "Always here to help!",
-            "Glad I could assist!",
-            "Happy to serve!",
-            "Of course! You're welcome!",
-            "Sure thing!"
+            "**May the force be with you**",
+            "**Han Solo -** I have a bad feeling about this",
+            "**Obi-Wan Kenobi -** Hello there",
+            "**Darth Vader -** No, I am your father",
+            "**Yoda -** Do. Or do not. There is no try",
+            "**Admiral Akbar -** It's a trap!",
+            "**Chirrut Imwe -** I am one with the force. The force is with me",
+            "**Jyn Erso -** Rebellions are built on hope",
+            "**Darth Vader -** I find your lack of faith disturbing",
+            "**Obi-Wan Kenobi -** These arent the droids you're looking for!",
+            "**Princess Leia -** Help me Obi-Wan Kenobi. You're my only hope",
+            "**Obi-Wan Kenobi -** It's over, Anakin. I have the high ground",
+            "**Han Solo -** Never tell me the odds",
+            "**Han Solo -** Hokey religions and ancient weapons are no match for a good blaster at your side kid",
+            "**Princess Leia -** Arent you a little short for a storm trooper?",
+            "**Obi-Wan Kenobi -** If you strike me down, I shall become more powerful than you can possibly imagine.",
+            "**Darth Vader -** When I left you, I was but the learner. Now I am the master.",
+            "**Han Solo -**Laugh it up, fuzzball.",
+            "**Yoda -**Ah! A great warrior. Wars not make one great.",
+            "**Qui-Gon Jinn -**The ability to speak does not make you intelligent.",
+            "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbTFmNXhiemMxemh1Y2V6ZTd5eHFjcmxrY2N4NGU1c296ZHc1Mjd2NSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l1KuaZAX3mO2nwYP6/giphy.gif",
+            "https://media.giphy.com/media/3ofSBcI3HFPcpJ0Eda/giphy.gif",
+            "https://media.giphy.com/media/l3fZXTZdS6Ofi7U6A/giphy.gif",
         };
 
             var randomResponse = responses[new Random().Next(responses.Count)];
