@@ -84,7 +84,7 @@ namespace SysBot.Pokemon.Discord
                 Color = embedColor,
                 Description = embedDescription
             }
-            .WithTitle("Important Announcement!")
+            .WithTitle("Important Announcement from the Empire!")
             .WithThumbnailUrl(thumbnailUrl)
             .Build();
 
@@ -124,13 +124,11 @@ namespace SysBot.Pokemon.Discord
         {
             var thumbnailOptions = new List<string>
     {
-        "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/gengarmegaphone.png",
-        "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/pikachumegaphone.png",
-        "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/umbreonmegaphone.png",
-        "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/sylveonmegaphone.png",
-        "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/charmandermegaphone.png",
-        "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/jigglypuffmegaphone.png",
-        "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/flareonmegaphone.png",
+        "https://media.discordapp.net/attachments/1152944125818183681/1218757568432836628/Announcement_1.png?ex=6608d36f&is=65f65e6f&hm=efe8af3813bb18e323617e18c6f305d7d69e74bfe8d3fc53d049d18604a82776&=&format=webp&quality=lossless&width=970&height=988",
+        "https://media.discordapp.net/attachments/1152944125818183681/1218757568839548928/Announcement_2.png?ex=6608d36f&is=65f65e6f&hm=91bcd6972fb2e59ba90cbe6d28f4c44b107da81af6995933005b87bca48e27dc&=&format=webp&quality=lossless&width=970&height=988",
+        "https://media.discordapp.net/attachments/1152944125818183681/1218757569175228507/Announcement_3.png?ex=6608d36f&is=65f65e6f&hm=9d1a7dc5706bf6ebd24eedf85a532f51746e6ace93d00a32af7a0bc5d8129cc0&=&format=webp&quality=lossless&width=1002&height=988",
+        "https://media.discordapp.net/attachments/1152944125818183681/1218757569510637718/Announcement_4.png?ex=6608d36f&is=65f65e6f&hm=6167fc4e2c586cc8ad277cb498723eebca2a548985eed1b11f6b177ce1f821eb&=&format=webp&quality=lossless&width=1002&height=988",
+        "https://media.discordapp.net/attachments/1152944125818183681/1218757569808695327/Announcement_5.png?ex=6608d370&is=65f65e70&hm=edd5d102e8e5a12c4a54fdceb965684b50f92b5940e9a06b2e8b5611b500366a&=&format=webp&quality=lossless&width=1002&height=988",
     };
             var random = new Random();
             return thumbnailOptions[random.Next(thumbnailOptions.Count)];
@@ -152,11 +150,11 @@ namespace SysBot.Pokemon.Discord
         {
             return option switch
             {
-                ThumbnailOption.Gengar => "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/gengarmegaphone.png",
-                ThumbnailOption.Pikachu => "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/pikachumegaphone.png",
-                ThumbnailOption.Umbreon => "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/umbreonmegaphone.png",
-                ThumbnailOption.Sylveon => "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/sylveonmegaphone.png",
-                ThumbnailOption.Charmander => "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/charmandermegaphone.png",
+                ThumbnailOption.Gengar => "https://media.discordapp.net/attachments/1152944125818183681/1218757568432836628/Announcement_1.png?ex=6608d36f&is=65f65e6f&hm=efe8af3813bb18e323617e18c6f305d7d69e74bfe8d3fc53d049d18604a82776&=&format=webp&quality=lossless&width=970&height=988",
+                ThumbnailOption.Pikachu => "https://media.discordapp.net/attachments/1152944125818183681/1218757568839548928/Announcement_2.png?ex=6608d36f&is=65f65e6f&hm=91bcd6972fb2e59ba90cbe6d28f4c44b107da81af6995933005b87bca48e27dc&=&format=webp&quality=lossless&width=970&height=988",
+                ThumbnailOption.Umbreon => "https://media.discordapp.net/attachments/1152944125818183681/1218757569175228507/Announcement_3.png?ex=6608d36f&is=65f65e6f&hm=9d1a7dc5706bf6ebd24eedf85a532f51746e6ace93d00a32af7a0bc5d8129cc0&=&format=webp&quality=lossless&width=1002&height=988",
+                ThumbnailOption.Sylveon => "https://media.discordapp.net/attachments/1152944125818183681/1218757569510637718/Announcement_4.png?ex=6608d36f&is=65f65e6f&hm=6167fc4e2c586cc8ad277cb498723eebca2a548985eed1b11f6b177ce1f821eb&=&format=webp&quality=lossless&width=1002&height=988",
+                ThumbnailOption.Charmander => "https://media.discordapp.net/attachments/1152944125818183681/1218757569808695327/Announcement_5.png?ex=6608d370&is=65f65e70&hm=edd5d102e8e5a12c4a54fdceb965684b50f92b5940e9a06b2e8b5611b500366a&=&format=webp&quality=lossless&width=1002&height=988",
                 ThumbnailOption.Jigglypuff => "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/jigglypuffmegaphone.png",
                 ThumbnailOption.Flareon => "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/flareonmegaphone.png",
                 _ => "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/gengarmegaphone.png",
