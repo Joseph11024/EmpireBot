@@ -12,6 +12,7 @@ public class TradeSettings : IBotStateSettings, ICountSettings
     private const string CountStats = nameof(CountStats);
     private const string HOMELegality = nameof(HOMELegality);
     private const string TradeConfig = nameof(TradeConfig);
+    private const string AutoCorrectShowdownConfig = nameof(AutoCorrectShowdownConfig);
     private const string VGCPastesConfig = nameof(VGCPastesConfig);
     private const string Miscellaneous = nameof(Miscellaneous);
     private const string RequestFolders = nameof(RequestFolders);
@@ -36,11 +37,11 @@ public class TradeSettings : IBotStateSettings, ICountSettings
     [Category(VGCPastesConfig), Description("Settings related to VGCPastes Configuration."), DisplayName("VGC Pastes Configuration"), Browsable(true)]
     public VGCPastesCategory VGCPastesConfiguration { get; set; } = new();
 
+    [Category(AutoCorrectShowdownConfig), Description("Settings related to Auto Correcting Showdown Sets."), DisplayName("Auto Correct Showdown Settings"), Browsable(true)]
+    public AutoCorrectShowdownCategory AutoCorrectConfig { get; set; } = new();
+
     [Category(EmbedSettings), Description("Settings related to the Trade Embed in Discord."), DisplayName("Trade Embed Settings"), Browsable(true)]
     public TradeEmbedSettingsCategory TradeEmbedSettings { get; set; } = new();
-
-    [Category(HOMELegality), Description("Settings related to HOME Legality."), DisplayName("HOME Legality Settings"), Browsable(true)]
-    public HOMELegalitySettingsCategory HomeLegalitySettings { get; set; } = new();
 
     [Category(RequestFolders), Description("Settings related to Request Folders."), DisplayName("Request Folder Settings"), Browsable(true)]
     public RequestFolderSettingsCategory RequestFolderSettings { get; set; } = new();
@@ -77,9 +78,6 @@ public class TradeSettings : IBotStateSettings, ICountSettings
 
         [Category(TradeConfig), Description("If set to True, each valid Pokemon will come with all suggested Relearnable Moves without the need for a batch command."), DisplayName("Suggest Relearnable Moves by Default")]
         public bool SuggestRelearnMoves { get; set; } = true;
-
-        [Category(TradeConfig), Description("If set to True, each showdown set will go through a spell check first to make sure species name is correct."), DisplayName("Enable SpellCheck?")]
-        public bool SpellCheck { get; set; } = true;
 
         [Category(TradeConfig), Description("Toggle to allow or disallow batch trades."), DisplayName("Allow Batch Trades")]
         public bool AllowBatchTrades { get; set; } = true;
@@ -118,12 +116,93 @@ public class TradeSettings : IBotStateSettings, ICountSettings
         }
     }
 
+    [Category(nameof(AutoCorrectShowdownConfig)), TypeConverter(typeof(CategoryConverter<AutoCorrectShowdownCategory>))]
+    public class AutoCorrectShowdownCategory
+    {
+        public override string ToString() => "Auto Correct Showdown Settings";
+
+        [Category(nameof(AutoCorrectShowdownCategory)), Description("If set to True, each failed showdown set will go through auto correction."), DisplayName("Enable Auto Correct")]
+        public bool EnableAutoCorrect { get; set; } = true;
+
+        private bool _autoCorrectSpeciesAndForm = true;
+        [Category(nameof(AutoCorrectShowdownCategory)), Description("If set to True, auto correction will correct wrong species and form."), DisplayName("Auto Correct Species and Form")]
+        public bool AutoCorrectSpeciesAndForm
+        {
+            get => EnableAutoCorrect && _autoCorrectSpeciesAndForm;
+            set => _autoCorrectSpeciesAndForm = value;
+        }
+
+        private bool _autoCorrectHeldItem = true;
+        [Category(nameof(AutoCorrectShowdownCategory)), Description("If set to True, auto correction will correct wrong held item."), DisplayName("Auto Correct Held Item")]
+        public bool AutoCorrectHeldItem
+        {
+            get => EnableAutoCorrect && _autoCorrectHeldItem;
+            set => _autoCorrectHeldItem = value;
+        }
+
+        private bool _autoCorrectNature = true;
+        [Category(nameof(AutoCorrectShowdownCategory)), Description("If set to True, auto correction will correct wrong nature."), DisplayName("Auto Correct Nature")]
+        public bool AutoCorrectNature
+        {
+            get => EnableAutoCorrect && _autoCorrectNature;
+            set => _autoCorrectNature = value;
+        }
+
+        private bool _autoCorrectAbility = true;
+        [Category(nameof(AutoCorrectShowdownCategory)), Description("If set to True, auto correction will correct wrong ability."), DisplayName("Auto Correct Ability")]
+        public bool AutoCorrectAbility
+        {
+            get => EnableAutoCorrect && _autoCorrectAbility;
+            set => _autoCorrectAbility = value;
+        }
+
+        private bool _autoCorrectBall = true;
+        [Category(nameof(AutoCorrectShowdownCategory)), Description("If set to True, auto correction will correct wrong Ball Name."), DisplayName("Auto Correct Ball")]
+        public bool AutoCorrectBall
+        {
+            get => EnableAutoCorrect && _autoCorrectBall;
+            set => _autoCorrectBall = value;
+        }
+
+        private bool _autoCorrectLevel = true;
+        [Category(nameof(AutoCorrectShowdownCategory)), Description("If set to True, auto correction will correct wrong level."), DisplayName("Auto Correct Level")]
+        public bool AutoCorrectLevel
+        {
+            get => EnableAutoCorrect && _autoCorrectLevel;
+            set => _autoCorrectLevel = value;
+        }
+
+        private bool _autoCorrectMovesLearnset = true;
+        [Category(nameof(AutoCorrectShowdownCategory)), Description("If set to True, auto correction will correct wrong moves and learnset."), DisplayName("Auto Correct Moves/Learnset")]
+        public bool AutoCorrectMovesLearnset
+        {
+            get => EnableAutoCorrect && _autoCorrectMovesLearnset;
+            set => _autoCorrectMovesLearnset = value;
+        }
+
+        private bool _autoCorrectEVs = true;
+        [Category(nameof(AutoCorrectShowdownCategory)), Description("If set to True, auto correction will correct wrong EVs."), DisplayName("Auto Correct EVs")]
+        public bool AutoCorrectEVs
+        {
+            get => EnableAutoCorrect && _autoCorrectEVs;
+            set => _autoCorrectEVs = value;
+        }
+
+        private bool _autoCorrectIVs = true;
+        [Category(nameof(AutoCorrectShowdownCategory)), Description("If set to True, auto correction will correct wrong IVs."), DisplayName("Auto Correct IVs")]
+        public bool AutoCorrectIVs
+        {
+            get => EnableAutoCorrect && _autoCorrectIVs;
+            set => _autoCorrectIVs = value;
+        }
+    }
+
     [Category(EmbedSettings), TypeConverter(typeof(CategoryConverter<TradeEmbedSettingsCategory>))]
     public class TradeEmbedSettingsCategory
     {
         public override string ToString() => "Trade Embed Configuration Settings";
 
-        private bool _useEmbeds;
+        private bool _useEmbeds = true;
         [Category(EmbedSettings), Description("If true, will show beautiful embeds in your discord trade channels of what the user is trading. False will show default text."), DisplayName("Use Embeds")]
         public bool UseEmbeds
         {
@@ -259,18 +338,6 @@ public class TradeSettings : IBotStateSettings, ICountSettings
 
         [Category(VGCPastesConfig), Description("GID of Spreadsheet tab you would like to pull from. Hint: https://docs.google.com/spreadsheets/d/ID/gid=1837599752"), DisplayName("GID of Spreadsheet Tab")]
         public int GID { get; set; } = 1837599752; // Reg F Tab
-    }
-
-    [Category(HOMELegality), TypeConverter(typeof(CategoryConverter<HOMELegalitySettingsCategory>))]
-    public class HOMELegalitySettingsCategory
-    {
-        public override string ToString() => "HOME Legality Settings";
-
-        [Category(HOMELegality), Description("Prevents trading Pokémon that require a HOME Tracker, even if the file has one already."), DisplayName("Disallow Non-Native Pokémon")]
-        public bool DisallowNonNatives { get; set; } = false;
-
-        [Category(HOMELegality), Description("Prevents trading Pokémon that already have a HOME Tracker."), DisplayName("Disallow Home Tracked Pokémon")]
-        public bool DisallowTracked { get; set; } = false;
     }
 
     [Category(RequestFolders), TypeConverter(typeof(CategoryConverter<RequestFolderSettingsCategory>))]
