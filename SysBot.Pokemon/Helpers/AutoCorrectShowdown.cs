@@ -5,8 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using SysBot.Base;
-using static PKHeX.Core.BallUseLegality;
 using System.Text.RegularExpressions;
+using static PKHeX.Core.LearnMethod;
 
 namespace SysBot.Pokemon;
 
@@ -49,13 +49,13 @@ public static class AutoCorrectShowdown<T> where T : PKM, new()
         var personalAbilityInfo = GetPersonalInfo(speciesIndex);
         string correctedAbilityName = autoCorrectConfig.AutoCorrectAbility ? GetClosestAbility(abilityName, speciesIndex, gameStrings, personalAbilityInfo) : abilityName;
         string correctedNatureName = autoCorrectConfig.AutoCorrectNature ? GetClosestNature(natureName, gameStrings) : natureName;
-        string correctedBallName = autoCorrectConfig.AutoCorrectBall ? GetLegalBall(speciesIndex, correctedFormName, ballName, gameStrings, la) : ballName;
+        string correctedBallName = autoCorrectConfig.AutoCorrectBall ? GetLegalBall(speciesIndex, correctedFormName, ballName, gameStrings, pk) : ballName;
 
         var levelVerifier = new LevelVerifier();
         if (autoCorrectConfig.AutoCorrectLevel)
             levelVerifier.Verify(la);
-
-        gender = ValidateGender(pk, gender, speciesName);
+        if (autoCorrectConfig.AutoCorrectGender)
+            gender = ValidateGender(pk, gender, speciesName);
 
         if (autoCorrectConfig.AutoCorrectMovesLearnset)
             ValidateMoves(lines, pk, la, gameStrings, correctedSpeciesName, correctedFormName);
@@ -69,6 +69,17 @@ public static class AutoCorrectShowdown<T> where T : PKM, new()
         string correctedHeldItem = autoCorrectConfig.AutoCorrectHeldItem ? ValidateHeldItem(lines, pk, itemlist, heldItem) : heldItem;
 
         string[] correctedLines = lines.Select((line, i) => CorrectLine(line, i, speciesName, correctedSpeciesName, correctedFormName, gender, correctedHeldItem, correctedAbilityName, correctedNatureName, correctedBallName, levelValue, la, nickname)).ToArray();
+
+        if (autoCorrectConfig.AutoCorrectNickname)
+        {
+            var nicknameVerifier = new NicknameVerifier();
+            nicknameVerifier.Verify(la);
+            if (!la.Valid)
+            {
+                string fixedNickname = autoCorrectConfig.FixedNickname;
+                correctedLines[0] = CorrectLine(correctedLines[0], 0, speciesName, correctedSpeciesName, correctedFormName, gender, correctedHeldItem, correctedAbilityName, correctedNatureName, correctedBallName, levelValue, la, fixedNickname);
+            }
+        }
 
         string finalShowdownSet = string.Join(Environment.NewLine, correctedLines);
 
@@ -437,6 +448,36 @@ public static class AutoCorrectShowdown<T> where T : PKM, new()
                     .Where(m => !string.IsNullOrEmpty(m)));
             }
         }
+        else if (learnSource is LearnSource7GG learnSource7GG)
+        {
+            if (learnSource7GG.TryGetPersonal((ushort)speciesIndex, form, out var personalInfo))
+            {
+                var evo = new EvoCriteria
+                {
+                    Species = (ushort)speciesIndex,
+                    Form = form,
+                    LevelMax = 100,
+                };
+
+                // Level-up moves (including Move Reminder)
+                var learnset = learnSource7GG.GetLearnset((ushort)speciesIndex, form);
+                validMoves.AddRange(learnset.GetMoveRange(100).ToArray() // 100 is the bonus for Move Reminder in LGPE
+                    .Select(m => gameStrings.movelist[m])
+                    .Where(m => !string.IsNullOrEmpty(m)));
+
+                // TM moves and special tutor moves
+                for (int move = 0; move < gameStrings.movelist.Length; move++)
+                {
+                    var learnInfo = learnSource7GG.GetCanLearn(pk, personalInfo, evo, (ushort)move);
+                    if (learnInfo.Method is TMHM or Tutor)
+                    {
+                        var moveName = gameStrings.movelist[move];
+                        if (!string.IsNullOrEmpty(moveName))
+                            validMoves.Add(moveName);
+                    }
+                }
+            }
+        }
         return validMoves.Distinct().ToArray();
     }
 
@@ -465,7 +506,8 @@ public static class AutoCorrectShowdown<T> where T : PKM, new()
             return LearnSource8LA.Instance;
         if (pk is PK8)
             return LearnSource8SWSH.Instance;
-
+        if (pk is PB7)
+            return LearnSource7GG.Instance;
         throw new ArgumentException("Unsupported PKM type.", nameof(pk));
     }
 
@@ -494,29 +536,31 @@ public static class AutoCorrectShowdown<T> where T : PKM, new()
         return fuzzyNature.Distance >= 80 ? fuzzyNature.Nature : null;
     }
 
-    private static string GetClosestBall(string userBall, GameStrings gameStrings, ulong legalBalls)
+    private static string GetLegalBall(ushort speciesIndex, string formName, string ballName, GameStrings gameStrings, PKM pk)
     {
-        var fuzzyBall = gameStrings.balllist
-            .Where(b => !string.IsNullOrWhiteSpace(b) && IsBallPermitted(legalBalls, (byte)Array.IndexOf(gameStrings.itemlist, b)))
+        var closestBall = GetClosestBall(ballName, gameStrings);
+
+        if (closestBall != null)
+        {
+            pk.Ball = (byte)Array.IndexOf(gameStrings.itemlist, closestBall);
+            if (new LegalityAnalysis(pk).Valid)
+                return closestBall;
+        }
+
+        var legalBall = BallApplicator.ApplyBallLegalByColor(pk);
+        return gameStrings.itemlist[legalBall];
+    }
+
+    private static string GetClosestBall(string userBall, GameStrings gameStrings)
+    {
+        var ballList = gameStrings.balllist.Where(b => !string.IsNullOrWhiteSpace(b)).ToArray();
+
+        var fuzzyBall = ballList
             .Select(b => (BallName: b, Distance: Fuzz.PartialRatio(userBall, b)))
             .OrderByDescending(b => b.Distance)
             .FirstOrDefault();
 
-        return fuzzyBall != default ? fuzzyBall.BallName : gameStrings.itemlist[(int)Ball.Poke];
-    }
-
-    private static string GetLegalBall(ushort speciesIndex, string formName, string ballName, GameStrings gameStrings, LegalityAnalysis la)
-    {
-        var ballVerifier = new BallVerifier();
-        ballVerifier.Verify(la);
-
-        if (la.Valid)
-            return ballName;
-
-        var legalBalls = GetWildBalls(la.Info.Generation, la.EncounterMatch.Version);
-        var closestBall = GetClosestBall(ballName, gameStrings, legalBalls);
-
-        return closestBall ?? gameStrings.itemlist[(int)Ball.Poke];
+        return fuzzyBall != default ? fuzzyBall.BallName : null;
     }
 
     private static GameStrings GetGameStrings()

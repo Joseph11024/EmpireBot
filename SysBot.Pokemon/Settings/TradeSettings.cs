@@ -124,6 +124,30 @@ public class TradeSettings : IBotStateSettings, ICountSettings
         [Category(nameof(AutoCorrectShowdownCategory)), Description("If set to True, each failed showdown set will go through auto correction."), DisplayName("Enable Auto Correct")]
         public bool EnableAutoCorrect { get; set; } = true;
 
+        private bool _autoCorrectEmbedIndicator = true;
+        [Category(nameof(AutoCorrectShowdownCategory)), Description("If set to True, we will put an indicator on Trade Embeds showing a trade was Auto Corrected."), DisplayName("Show Trade Embed Indicator?")]
+        public bool AutoCorrectEmbedIndicator
+        {
+            get => EnableAutoCorrect && _autoCorrectEmbedIndicator;
+            set => _autoCorrectEmbedIndicator = value;
+        }
+
+        private bool _autoCorrectNickname = true;
+        [Category(nameof(AutoCorrectShowdownCategory)), Description("If set to True, auto correction will correct illegal nicknames."), DisplayName("Auto Correct Nicknames?")]
+        public bool AutoCorrectNickname
+        {
+            get => EnableAutoCorrect && _autoCorrectNickname;
+            set => _autoCorrectNickname = value;
+        }
+
+        private string _fixedNickname = string.Empty;
+        [Category(nameof(AutoCorrectShowdownCategory)), Description("Set a default Nickname. If none provided, it will just be blank."), DisplayName("Rename Invalid Nicknames to...")]
+        public string FixedNickname
+        {
+            get => EnableAutoCorrect ? _fixedNickname : string.Empty;
+            set => _fixedNickname = value;
+        }
+
         private bool _autoCorrectSpeciesAndForm = true;
         [Category(nameof(AutoCorrectShowdownCategory)), Description("If set to True, auto correction will correct wrong species and form."), DisplayName("Auto Correct Species and Form")]
         public bool AutoCorrectSpeciesAndForm
@@ -170,6 +194,14 @@ public class TradeSettings : IBotStateSettings, ICountSettings
         {
             get => EnableAutoCorrect && _autoCorrectLevel;
             set => _autoCorrectLevel = value;
+        }
+
+        private bool _autoCorrectGender = true;
+        [Category(nameof(AutoCorrectShowdownCategory)), Description("If set to True, auto correction will correct wrong gender."), DisplayName("Auto Correct Gender")]
+        public bool AutoCorrectGender
+        {
+            get => EnableAutoCorrect && _autoCorrectGender;
+            set => _autoCorrectGender = value;
         }
 
         private bool _autoCorrectMovesLearnset = true;
