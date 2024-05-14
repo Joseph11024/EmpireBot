@@ -97,8 +97,6 @@ namespace SysBot.Pokemon.WinForms
             string downloadUrl = await UpdateChecker.FetchDownloadUrlAsync();
             if (!string.IsNullOrWhiteSpace(downloadUrl))
             {
-                string downloadedFilePath = await StartDownloadProcessAsync(downloadUrl);
-                if (!string.IsNullOrEmpty(downloadedFilePath))
                 {
                     // Close the application
                     Application.Exit();
@@ -107,7 +105,6 @@ namespace SysBot.Pokemon.WinForms
                     Process.Start(new ProcessStartInfo
                     {
                         FileName = "cmd.exe",
-                        Arguments = $"/C timeout /t 1 & move /y \"{downloadedFilePath}\" \"{Application.ExecutablePath}\" & start \"\" \"{Application.ExecutablePath}\"",
                         CreateNoWindow = true,
                         UseShellExecute = false
                     });
@@ -119,18 +116,5 @@ namespace SysBot.Pokemon.WinForms
             }
         }
 
-        private static async Task<string> StartDownloadProcessAsync(string downloadUrl)
-        {
-            Main.IsUpdating = true;
-            string downloadedFilePath = Path.Combine(Application.StartupPath, "SysBot.Pokemon.WinForms.exe");
-            using (var client = new HttpClient())
-            {
-                var response = await client.GetAsync(downloadUrl);
-                response.EnsureSuccessStatusCode();
-                var fileBytes = await response.Content.ReadAsByteArrayAsync();
-                await File.WriteAllBytesAsync(downloadedFilePath, fileBytes);
-            }
-            return downloadedFilePath;
-        }
     }
 }
