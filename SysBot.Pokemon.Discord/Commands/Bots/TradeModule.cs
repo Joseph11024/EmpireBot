@@ -491,7 +491,7 @@ public class TradeModule<T> : ModuleBase<SocketCommandContext> where T : PKM, ne
                 // Perform auto correct if it's on and send that shit through again
                 if (SysCord<T>.Runner.Config.Trade.AutoCorrectConfig.EnableAutoCorrect && !la.Valid)
                 {
-                    var correctedContent = AutoCorrectShowdown<T>.PerformAutoCorrect(content, pkm, la);
+                    var correctedContent = await AutoCorrectShowdown<T>.PerformAutoCorrect(content, pkm, la);
                     set = new ShowdownSet(correctedContent);
                     template = AutoLegalityWrapper.GetTemplate(set);
                     pkm = sav.GetLegal(template, out result);
@@ -544,6 +544,10 @@ public class TradeModule<T> : ModuleBase<SocketCommandContext> where T : PKM, ne
             var msg = $"Oops! An unexpected problem happened with this Showdown Set:\n```{string.Join("\n", set.GetSetLines())}```";
 
             _ = ReplyAndDeleteAsync(msg, 2, Context.Message);
+        }
+        if (Context.Message is IUserMessage userMessage)
+        {
+            _ = DeleteMessagesAfterDelayAsync(userMessage, null, 0);
         }
     }
 
@@ -660,7 +664,7 @@ public class TradeModule<T> : ModuleBase<SocketCommandContext> where T : PKM, ne
                 // Perform auto correct if it's on and send that shit through again
                 if (SysCord<T>.Runner.Config.Trade.AutoCorrectConfig.EnableAutoCorrect && !la.Valid)
                 {
-                    var correctedContent = AutoCorrectShowdown<T>.PerformAutoCorrect(content, pkm, la);
+                    var correctedContent = await AutoCorrectShowdown<T>.PerformAutoCorrect(content, pkm, la);
                     set = new ShowdownSet(correctedContent);
                     template = AutoLegalityWrapper.GetTemplate(set);
                     pkm = sav.GetLegal(template, out result);
@@ -952,7 +956,7 @@ public class TradeModule<T> : ModuleBase<SocketCommandContext> where T : PKM, ne
                 // Perform auto correct if it's on and send that shit through again
                 if (SysCord<T>.Runner.Config.Trade.AutoCorrectConfig.EnableAutoCorrect && !la.Valid)
                 {
-                    var correctedContent = AutoCorrectShowdown<T>.PerformAutoCorrect(tradeContent, pkm, la);
+                    var correctedContent = await AutoCorrectShowdown<T>.PerformAutoCorrect(tradeContent, pkm, la);
                     set = new ShowdownSet(correctedContent);
                     template = AutoLegalityWrapper.GetTemplate(set);
                     pkm = sav.GetLegal(template, out result);
