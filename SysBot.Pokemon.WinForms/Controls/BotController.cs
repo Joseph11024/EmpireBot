@@ -202,6 +202,11 @@ public partial class BotController : UserControl
             ReloadStatus(bot);
         }
     }
+
+    internal void SendCommand(BotControlCommand cmd, bool v)
+    {
+        throw new NotImplementedException();
+    }
 }
 
 public enum BotControlCommand
