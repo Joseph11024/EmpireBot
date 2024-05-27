@@ -301,6 +301,7 @@ public sealed class SysCord<T> where T : PKM, new()
                 return;
             }
         }
+
         if (msg.Author.Id == _client.CurrentUser.Id || msg.Author.IsBot)
             return;
 
@@ -313,12 +314,21 @@ public sealed class SysCord<T> where T : PKM, new()
 
         var correctPrefix = SysCordSettings.Settings.CommandPrefix;
         var content = msg.Content;
-        var command = content.Split(' ')[0][1..]; 
-        var prefix = content[0].ToString();
+        var argPos = 0;
 
-        if (_validCommands.Contains(command))
+        if (msg.HasMentionPrefix(_client.CurrentUser, ref argPos) || msg.HasStringPrefix(correctPrefix, ref argPos))
         {
-            if (prefix != correctPrefix)
+            var context = new SocketCommandContext(_client, msg);
+            var handled = await TryHandleCommandAsync(msg, context, argPos);
+            if (handled)
+                return;
+        }
+        else if (content.Length > 1 && content[0] != correctPrefix[0])
+        {
+            var potentialPrefix = content[0].ToString();
+            var command = content.Split(' ')[0][1..];
+
+            if (_validCommands.Contains(command))
             {
                 var response = await msg.Channel.SendMessageAsync($"Incorrect prefix! The correct command is **{correctPrefix}{command}**").ConfigureAwait(false);
                 _ = Task.Delay(5000).ContinueWith(async _ =>
@@ -330,13 +340,63 @@ public sealed class SysCord<T> where T : PKM, new()
             }
         }
 
-        var argPos = 0;
-        if (!msg.HasMentionPrefix(_client.CurrentUser, ref argPos) && !msg.HasStringPrefix(correctPrefix, ref argPos))
-            return;
+        if (msg.Attachments.Count > 0)
+        {
+            await TryHandleAttachmentAsync(msg).ConfigureAwait(false);
+        }
+    }
 
-        var context = new SocketCommandContext(_client, msg);
-        await TryHandleCommandAsync(msg, context, argPos);
-        await TryHandleMessageAsync(msg).ConfigureAwait(false);
+    private async Task<bool> TryHandleCommandAsync(SocketUserMessage msg, SocketCommandContext context, int pos)
+    {
+        var AbuseSettings = Hub.Config.TradeAbuse;
+
+        // Check if the user is in the bannedIDs list
+        if (msg.Author is SocketGuildUser user)
+        {
+            if (AbuseSettings.BannedIDs.List.Any(z => z.ID == user.Id))
+            {
+                await msg.Channel.SendMessageAsync("You are banned from using this bot.").ConfigureAwait(false);
+                return true;
+            }
+        }
+
+        var mgr = Manager;
+        if (!mgr.CanUseCommandUser(msg.Author.Id))
+        {
+            await msg.Channel.SendMessageAsync("You are not permitted to use this command.").ConfigureAwait(false);
+            return true;
+        }
+        if (!mgr.CanUseCommandChannel(msg.Channel.Id) && msg.Author.Id != mgr.Owner)
+        {
+            if (Hub.Config.Discord.ReplyCannotUseCommandInChannel)
+                await msg.Channel.SendMessageAsync("You can't use that command here.").ConfigureAwait(false);
+            return true;
+        }
+
+        var guild = msg.Channel is SocketGuildChannel g ? g.Guild.Name : "Unknown Guild";
+        await Log(new LogMessage(LogSeverity.Info, "Command", $"Executing command from {guild}#{msg.Channel.Name}:@{msg.Author.Username}. Content: {msg}")).ConfigureAwait(false);
+        var result = await _commands.ExecuteAsync(context, pos, _services).ConfigureAwait(false);
+
+        if (result.Error == CommandError.UnknownCommand)
+            return false;
+
+        if (!result.IsSuccess)
+            await msg.Channel.SendMessageAsync(result.ErrorReason).ConfigureAwait(false);
+        return true;
+    }
+
+    private async Task TryHandleAttachmentAsync(SocketMessage msg)
+    {
+        var mgr = Manager;
+        var cfg = mgr.Config;
+        if (cfg.ConvertPKMToShowdownSet && (cfg.ConvertPKMReplyAnyChannel || mgr.CanUseCommandChannel(msg.Channel.Id)))
+        {
+            if (msg is SocketUserMessage userMessage)
+            {
+                foreach (var att in msg.Attachments)
+                    await msg.Channel.RepostPKMAsShowdownAsync(att, userMessage).ConfigureAwait(false);
+            }
+        }
     }
 
     private static async Task RespondToThanksMessage(SocketUserMessage msg)
@@ -345,7 +405,7 @@ public sealed class SysCord<T> where T : PKM, new()
         await channel.TriggerTypingAsync();
         await Task.Delay(1500);
 
-            var responses = new List<string>
+        var responses = new List<string>
         {
             "**May the force be with you**",
             "**Han Solo -** I have a bad feeling about this",
@@ -376,66 +436,6 @@ public sealed class SysCord<T> where T : PKM, new()
         var finalResponse = $"{randomResponse}";
 
         await msg.Channel.SendMessageAsync(finalResponse).ConfigureAwait(false);
-    }
-
-    private async Task<bool> TryHandleCommandAsync(SocketUserMessage msg, SocketCommandContext context, int pos)
-    {
-        // Create a Command Context.
-        var contextprefix = new SocketCommandContext(_client, msg);
-        var AbuseSettings = Hub.Config.TradeAbuse;
-
-        // Check if the user is in the bannedIDs list
-        if (msg.Author is SocketGuildUser user)
-        {
-            if (AbuseSettings.BannedIDs.List.Any(z => z.ID == user.Id))
-            {
-                await msg.Channel.SendMessageAsync("You are banned from using this bot.").ConfigureAwait(false);
-                return true;
-            }
-        }
-
-        // Check Permission
-        var mgr = Manager;
-        if (!mgr.CanUseCommandUser(msg.Author.Id))
-        {
-            await msg.Channel.SendMessageAsync("You are not permitted to use this command.").ConfigureAwait(false);
-            return true;
-        }
-        if (!mgr.CanUseCommandChannel(msg.Channel.Id) && msg.Author.Id != mgr.Owner)
-        {
-            if (Hub.Config.Discord.ReplyCannotUseCommandInChannel)
-                await msg.Channel.SendMessageAsync("You can't use that command here.").ConfigureAwait(false);
-            return true;
-        }
-
-        // Execute the command.
-        var guild = msg.Channel is SocketGuildChannel g ? g.Guild.Name : "Unknown Guild";
-        await Log(new LogMessage(LogSeverity.Info, "Command", $"Executing command from {guild}#{msg.Channel.Name}:@{msg.Author.Username}. Content: {msg}")).ConfigureAwait(false);
-        var result = await _commands.ExecuteAsync(context, pos, _services).ConfigureAwait(false);
-
-        if (result.Error == CommandError.UnknownCommand)
-            return false;
-
-        if (!result.IsSuccess)
-            await msg.Channel.SendMessageAsync(result.ErrorReason).ConfigureAwait(false);
-        return true;
-    }
-
-    private async Task TryHandleMessageAsync(SocketMessage msg)
-    {
-        if (msg.Attachments.Count > 0)
-        {
-            var mgr = Manager;
-            var cfg = mgr.Config;
-            if (cfg.ConvertPKMToShowdownSet && (cfg.ConvertPKMReplyAnyChannel || mgr.CanUseCommandChannel(msg.Channel.Id)))
-            {
-                if (msg is SocketUserMessage userMessage)
-                {
-                    foreach (var att in msg.Attachments)
-                        await msg.Channel.RepostPKMAsShowdownAsync(att, userMessage).ConfigureAwait(false);
-                }
-            }
-        }
     }
 
     private Task Client_PresenceUpdated(SocketUser user, SocketPresence before, SocketPresence after)
