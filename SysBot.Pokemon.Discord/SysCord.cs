@@ -363,7 +363,7 @@ public sealed class SysCord<T> where T : PKM, new()
         var mgr = Manager;
         if (!mgr.CanUseCommandUser(msg.Author.Id))
         {
-            await msg.Channel.SendMessageAsync("You are not permitted to use this command.").ConfigureAwait(false);
+            await msg.Channel.SendMessageAsync($"{msg.Author.Mention}, **You are blacklisted from using the bots! Contact the bot owner <@620973385899442208>!**").ConfigureAwait(false);
             return true;
         }
         if (!mgr.CanUseCommandChannel(msg.Channel.Id) && msg.Author.Id != mgr.Owner)
