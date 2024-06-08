@@ -332,6 +332,7 @@ public class PokeTradeBotSWSH(PokeTradeHub<PK8> hub, PokeBotState Config) : Poke
 
         var trainerName = await GetTradePartnerName(TradeMethod.LinkTrade, token).ConfigureAwait(false);
         var trainerTID = await GetTradePartnerTID7(TradeMethod.LinkTrade, token).ConfigureAwait(false);
+        var trainerSID = await GetTradePartnerSID7(TradeMethod.LinkTrade, token).ConfigureAwait(false);
         var trainerNID = await GetTradePartnerNID(token).ConfigureAwait(false);
         RecordUtil<PokeTradeBotSWSH>.Record($"Initiating\t{trainerNID:X16}\t{trainerName}\t{poke.Trainer.TrainerName}\t{poke.Trainer.ID}\t{poke.ID}\t{toSend.EncryptionConstant:X8}");
         Log($"Found Link Trade partner: {trainerName}-{trainerTID} (ID: {trainerNID})");
@@ -341,10 +342,11 @@ public class PokeTradeBotSWSH(PokeTradeHub<PK8> hub, PokeBotState Config) : Poke
 
         bool shouldUpdateOT = existingTradeDetails?.OT != trainerName;
         bool shouldUpdateTID = existingTradeDetails?.TID != int.Parse(trainerTID);
+        bool shouldUpdateSID = existingTradeDetails?.SID != int.Parse(trainerSID);
 
-        if (shouldUpdateOT || shouldUpdateTID)
+        if (shouldUpdateOT || shouldUpdateTID || shouldUpdateSID)
         {
-            tradeCodeStorage.UpdateTradeDetails(poke.Trainer.ID, shouldUpdateOT ? trainerName : existingTradeDetails.OT, shouldUpdateTID ? int.Parse(trainerTID) : existingTradeDetails.TID);
+            tradeCodeStorage.UpdateTradeDetails(poke.Trainer.ID, shouldUpdateOT ? trainerName : existingTradeDetails.OT, shouldUpdateTID ? int.Parse(trainerTID) : existingTradeDetails.TID, shouldUpdateSID ? int.Parse(trainerSID) : existingTradeDetails.SID);
         }
 
         var partnerCheck = CheckPartnerReputation(this, poke, trainerNID, trainerName, AbuseSettings, token);
@@ -362,7 +364,9 @@ public class PokeTradeBotSWSH(PokeTradeHub<PK8> hub, PokeBotState Config) : Poke
 
         if (hub.Config.Legality.UseTradePartnerInfo && !poke.IgnoreAutoOT)
         {
-            await SetPkmWithSwappedIDDetails(toSend, trainerName, sav, token);
+            uint trainerTIDValue = uint.Parse(trainerTID);
+            uint trainerSIDValue = uint.Parse(trainerSID);
+            await ApplyAutoOT(toSend, trainerName, trainerTIDValue, trainerSIDValue, sav, token).ConfigureAwait(false);
         }
 
         // Confirm Box 1 Slot 1
@@ -372,7 +376,7 @@ public class PokeTradeBotSWSH(PokeTradeHub<PK8> hub, PokeBotState Config) : Poke
                 await Click(A, 0_500, token).ConfigureAwait(false);
         }
 
-        poke.SendNotification(this, $"Found Link Trade partner: {trainerName}. TID: {trainerTID} Waiting for a Pokémon...");
+        poke.SendNotification(this, $"Found Link Trade partner: {trainerName}. **TID**: {trainerTID}  **SID**: {trainerSID}. Waiting for a Pokémon...");
 
         if (poke.Type == PokeTradeType.Dump)
             return await ProcessDumpTradeAsync(poke, token).ConfigureAwait(false);
@@ -1006,6 +1010,17 @@ public class PokeTradeBotSWSH(PokeTradeHub<PK8> hub, PokeBotState Config) : Poke
         return tid7;
     }
 
+    // Thanks Secludely https://github.com/Secludedly/ZE-FusionBot/commit/f064d9eaf11ba2b2a0a79fa4c7ec5bf6dacf780c
+    private async Task<string> GetTradePartnerSID7(TradeMethod tradeMethod, CancellationToken token)
+    {
+        var ofs = GetTrainerTIDSIDOffset(tradeMethod);
+        var data = await Connection.ReadBytesAsync(ofs, 8, token).ConfigureAwait(false);
+
+        var tidsid = BitConverter.ToUInt32(data, 0);
+        var sid7 = $"{tidsid / 1_000_000:0000}";
+        return sid7;
+    }
+
     public async Task<ulong> GetTradePartnerNID(CancellationToken token)
     {
         var data = await Connection.ReadBytesAsync(LinkTradePartnerNIDOffset, 8, token).ConfigureAwait(false);
@@ -1113,50 +1128,47 @@ public class PokeTradeBotSWSH(PokeTradeHub<PK8> hub, PokeBotState Config) : Poke
         return (clone, PokeTradeResult.Success);
     }
 
-    private async Task<bool> SetPkmWithSwappedIDDetails(PK8 toSend, string trainerName, SAV8SWSH sav, CancellationToken token)
+    private async Task<bool> ApplyAutoOT(PK8 toSend, string trainerName, uint trainerTID, uint trainerSID, SAV8SWSH sav, CancellationToken token)
     {
-        var data = await Connection.ReadBytesAsync(LinkTradePartnerNameOffset - 0x8, 8, token).ConfigureAwait(false);
-        var tidsid = BitConverter.ToUInt32(data, 0);
-        var cln = (PK8)toSend.Clone();
-        UpdateTrainerDetails(cln, data, trainerName, tidsid);
-        if (!toSend.IsNicknamed)
-            cln.ClearNickname();
+        var save = SaveUtil.GetBlankSAV(GameVersion.SW, trainerName, (LanguageID)toSend.Language);
+        save.SetDisplayID(trainerTID, trainerSID);
+        var cln = toSend.Clone();
         if (toSend.IsShiny)
             cln.SetShiny();
+        if (!toSend.IsNicknamed)
+            cln.ClearNickname();
+        cln.OriginalTrainerName = trainerName;
+        ClearOTTrash(cln, trainerName); // If Generated OT is longer than partner OT, expect Trash.
+        cln.DisplayTID = save.DisplayTID;
+        cln.DisplaySID = save.DisplaySID;
         cln.RefreshChecksum();
         var tradeswsh = new LegalityAnalysis(cln);
         if (tradeswsh.Valid)
         {
-            Log($"Pokemon is valid with Trade Partner Info applied.  Swapping details.");
+            Log($"Pokemon is valid with Trade Partner Info applied. Swapping details.");
             await SetBoxPokemon(cln, 0, 0, token, sav).ConfigureAwait(false);
+            return true;
         }
         else
         {
-            Log($"Pokemon not valid after using Trade Partner Info, keeping original object.");
+            Log("Pokemon not valid after using Trade Partner Info.");
+            Log(tradeswsh.Report());
+            return false;
         }
-        return tradeswsh.Valid;
     }
 
-    private static void UpdateTrainerDetails(PK8 pokemon, byte[] data, string trainerName, uint tidsid)
+    private void ClearOTTrash(PK8 pokemon, string trainerName)
     {
-        pokemon.OriginalTrainerGender = data[6];
-        pokemon.TrainerTID7 = tidsid % 1_000_000;
-        pokemon.TrainerSID7 = tidsid / 1_000_000;
-        pokemon.Language = data[5];
-
         Span<byte> trash = pokemon.OriginalTrainerTrash;
         trash.Clear();
-
         int maxLength = trash.Length / 2;
         int actualLength = Math.Min(trainerName.Length, maxLength);
-
         for (int i = 0; i < actualLength; i++)
         {
             char value = trainerName[i];
             trash[i * 2] = (byte)value;
             trash[i * 2 + 1] = (byte)(value >> 8);
         }
-
         if (actualLength < maxLength)
         {
             trash[actualLength * 2] = 0x00;
