@@ -301,14 +301,25 @@ public class PokeTradeBotLA(PokeTradeHub<PA8> Hub, PokeBotState Config) : PokeRo
 
         var tradeCodeStorage = new TradeCodeStorage();
         var existingTradeDetails = tradeCodeStorage.GetTradeDetails(poke.Trainer.ID);
-
         bool shouldUpdateOT = existingTradeDetails?.OT != tradePartner.TrainerName;
         bool shouldUpdateTID = existingTradeDetails?.TID != int.Parse(tradePartner.TID7);
         bool shouldUpdateSID = existingTradeDetails?.SID != int.Parse(tradePartner.SID7);
+        bool shouldUpdateLanguage = existingTradeDetails?.Language != tradePartner.Language;
 
-        if (shouldUpdateOT || shouldUpdateTID || shouldUpdateSID)
+        if (shouldUpdateOT || shouldUpdateTID || shouldUpdateSID || shouldUpdateLanguage)
         {
-            tradeCodeStorage.UpdateTradeDetails(poke.Trainer.ID, shouldUpdateOT ? tradePartner.TrainerName : existingTradeDetails.OT, shouldUpdateTID ? int.Parse(tradePartner.TID7) : existingTradeDetails.TID, shouldUpdateSID ? int.Parse(tradePartner.SID7) : existingTradeDetails.SID);
+#pragma warning disable CS8604 // Possible null reference argument.
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+            tradeCodeStorage.UpdateTradeDetails(
+                poke.Trainer.ID,
+                shouldUpdateOT ? tradePartner.TrainerName : existingTradeDetails.OT,
+                shouldUpdateTID ? int.Parse(tradePartner.TID7) : existingTradeDetails.TID,
+                shouldUpdateSID ? int.Parse(tradePartner.SID7) : existingTradeDetails.SID,
+                shouldUpdateLanguage ? tradePartner.Language : existingTradeDetails.Language
+
+            );
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
+#pragma warning restore CS8604 // Possible null reference argument.
         }
 
         var partnerCheck = CheckPartnerReputation(this, poke, trainerNID, tradePartner.TrainerName, AbuseSettings, token);
@@ -794,7 +805,10 @@ public class PokeTradeBotLA(PokeTradeHub<PA8> Hub, PokeBotState Config) : PokeRo
                 clone = AbstractTrade<PA8>.CherishHandler(mg.First(), info);
             else clone = (PA8)sav.GetLegal(AutoLegalityWrapper.GetTemplate(new ShowdownSet(string.Join("\n", set))), out _);
         }
-        else clone = (PA8)sav.GetLegal(AutoLegalityWrapper.GetTemplate(new ShowdownSet(string.Join("\n", set))), out _);
+        else
+        {
+            clone = (PA8)sav.GetLegal(AutoLegalityWrapper.GetTemplate(new ShowdownSet(string.Join("\n", set))), out _);
+        }
 
         clone = (PA8)AbstractTrade<PA8>.TrashBytes(clone, new LegalityAnalysis(clone));
         clone.ResetPartyStats();
