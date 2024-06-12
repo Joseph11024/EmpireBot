@@ -33,7 +33,6 @@ public sealed partial class Main : Form
 #pragma warning restore CS8618
     {
         InitializeComponent();
-        comboBox1.SelectedIndexChanged += new EventHandler(comboBox1_SelectedIndexChanged);
         this.Load += async (sender, e) => await InitializeAsync();
 
     }
@@ -780,4 +779,3 @@ public sealed partial class Main : Form
             B_Start.ForeColor = SoftWhite;
         }
     }
-}
