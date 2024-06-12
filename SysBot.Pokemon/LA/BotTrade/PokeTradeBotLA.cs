@@ -373,7 +373,7 @@ public class PokeTradeBotLA(PokeTradeHub<PA8> Hub, PokeBotState Config) : PokeRo
 
         if (Hub.Config.Legality.UseTradePartnerInfo && !poke.IgnoreAutoOT)
         {
-            await SetBoxPkmWithSwappedIDDetailsPLA(toSend, tradePartner, sav, token);
+            await ApplyAutoOT(toSend, tradePartner, sav, token);
         }
 
         Log("Confirming trade.");
@@ -855,8 +855,27 @@ public class PokeTradeBotLA(PokeTradeHub<PA8> Hub, PokeBotState Config) : PokeRo
 
     // based on https://github.com/Muchacho13Scripts/SysBot.NET/commit/f7879386f33bcdbd95c7a56e7add897273867106
     // and https://github.com/berichan/SysBot.PLA/commit/84042d4716007dc6ff3100ad4be4a483d622ccf8
-    private async Task<bool> SetBoxPkmWithSwappedIDDetailsPLA(PA8 toSend, TradePartnerLA tradePartner, SAV8LA sav, CancellationToken token)
+    private async Task<bool> ApplyAutoOT(PA8 toSend, TradePartnerLA tradePartner, SAV8LA sav, CancellationToken token)
     {
+        if (toSend is IHomeTrack pk && pk.HasTracker)
+        {
+            Log("Home tracker detected.  Can't apply AutoOT.");
+            return false;
+        }
+        if (toSend is IFatefulEncounterReadOnly fe && fe.FatefulEncounter &&
+            (toSend.TID16 != 0 || toSend.SID16 != 0) &&
+            (toSend.TID16 != 12345 || toSend.SID16 != 54321))
+        {
+            Log("Trade is a Mystery Gift with specific TID/SID. Skipping AutoOT.");
+            return false;
+        }
+
+        // Current handler cannot be past gen OT
+        if (toSend.Generation != toSend.Format)
+        {
+            Log("Can not apply Partner details: Current handler cannot be different gen OT.");
+            return false;
+        }
         var cln = toSend.Clone();
         cln.OriginalTrainerGender = tradePartner.Gender;
         cln.TrainerTID7 = uint.Parse(tradePartner.TID7);
@@ -869,9 +888,10 @@ public class PokeTradeBotLA(PokeTradeHub<PA8> Hub, PokeBotState Config) : PokeRo
             cln.ClearNickname();
 
         if (toSend.IsShiny)
-            cln.SetShiny();
+            cln.PID = (uint)((cln.TID16 ^ cln.SID16 ^ (cln.PID & 0xFFFF) ^ toSend.ShinyXor) << 16) | (cln.PID & 0xFFFF);
 
-        cln.RefreshChecksum();
+        if (!toSend.ChecksumValid)
+            cln.RefreshChecksum();
 
         var tradela = new LegalityAnalysis(cln);
         if (tradela.Valid)
@@ -897,12 +917,12 @@ public class PokeTradeBotLA(PokeTradeHub<PA8> Hub, PokeBotState Config) : PokeRo
         {
             char value = trainerName[i];
             trash[i * 2] = (byte)value;
-            trash[i * 2 + 1] = (byte)(value >> 8);
+            trash[(i * 2) + 1] = (byte)(value >> 8);
         }
         if (actualLength < maxLength)
         {
             trash[actualLength * 2] = 0x00;
-            trash[actualLength * 2 + 1] = 0x00;
+            trash[(actualLength * 2) + 1] = 0x00;
         }
     }
 }

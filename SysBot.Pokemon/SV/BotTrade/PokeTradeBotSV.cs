@@ -186,12 +186,12 @@ public class PokeTradeBotSV(PokeTradeHub<PK9> Hub, PokeBotState Config) : PokeRo
         {
             char value = name[i];
             trash[i * 2] = (byte)value;
-            trash[i * 2 + 1] = (byte)(value >> 8);
+            trash[(i * 2) + 1] = (byte)(value >> 8);
         }
         if (actualLength < maxLength)
         {
             trash[actualLength * 2] = 0x00;
-            trash[actualLength * 2 + 1] = 0x00;
+            trash[(actualLength * 2) + 1] = 0x00;
         }
     }
 
@@ -210,34 +210,88 @@ public class PokeTradeBotSV(PokeTradeHub<PK9> Hub, PokeBotState Config) : PokeRo
 
     private async Task<bool> ApplyAutoOT(PK9 toSend, TradeMyStatus tradePartner, SAV9SV sav, CancellationToken token)
     {
-        var save = SaveUtil.GetBlankSAV((GameVersion)tradePartner.Game, tradePartner.OT, (LanguageID)tradePartner.Language);
-        var tradePartnerSV = new TradePartnerSV(tradePartner);
-        save.SetDisplayID(uint.Parse(tradePartnerSV.TID7), uint.Parse(tradePartnerSV.SID7));
+        // Home Tracker Check
+        if (toSend is IHomeTrack pk && pk.HasTracker)
+        {
+            Log("Home tracker detected.  Can't apply AutoOT.");
+            return false;
+        }
+
+        // Don't apply to Ditto
+        if (toSend.Species == (ushort)Species.Ditto)
+        {
+            Log("Do nothing to trade Pokemon, since pokemon is Ditto");
+            return false;
+        }
+
+        // Mystery Gifts
+        if (toSend is IFatefulEncounterReadOnly fe && fe.FatefulEncounter &&
+            (toSend.TID16 != 0 || toSend.SID16 != 0) &&
+            (toSend.TID16 != 12345 || toSend.SID16 != 54321))
+        {
+            Log("Trade is a Mystery Gift with specific TID/SID. Skipping AutoOT.");
+            return false;
+        }
+
+        // Current handler cannot be past gen OT
+        if (toSend.Generation != toSend.Format)
+        {
+            Log("Can not apply Partner details: Current handler cannot be different gen OT.");
+            return false;
+        }
         var cln = toSend.Clone();
-        cln.OriginalTrainerName = tradePartner.OT;
-        ClearOTTrash(cln, tradePartner);  // If Generated OT is longer than partner OT, expect Trash.
-        cln.DisplayTID = save.DisplayTID;
-        cln.DisplaySID = save.DisplaySID;
         cln.OriginalTrainerGender = (byte)tradePartner.Gender;
+        cln.TrainerTID7 = (uint)Math.Abs(tradePartner.DisplayTID);
+        cln.TrainerSID7 = (uint)Math.Abs(tradePartner.DisplaySID);
         cln.Language = tradePartner.Language;
-        if (toSend.IsShiny)
-            cln.SetShiny();
+        cln.OriginalTrainerName = tradePartner.OT;
+        ClearOTTrash(cln, tradePartner);
+
+        ushort species = toSend.Species;
+        GameVersion version;
+        switch (species)
+        {
+            case (ushort)Species.Koraidon:
+            case (ushort)Species.GougingFire:
+            case (ushort)Species.RagingBolt:
+                version = GameVersion.SL;
+                Log("Scarlet version exclusive Pokémon, changing the version to Scarlet.");
+                break;
+
+            case (ushort)Species.Miraidon:
+            case (ushort)Species.IronCrown:
+            case (ushort)Species.IronBoulder:
+                version = GameVersion.VL;
+                Log("Violet version exclusive Pokémon, changing the version to Violet.");
+                break;
+
+            default:
+                version = (GameVersion)tradePartner.Game;
+                break;
+        }
+        cln.Version = version;
+
         if (!toSend.IsNicknamed)
             cln.ClearNickname();
-        cln.RefreshChecksum();
+
+        if (toSend.IsShiny)
+            cln.PID = (uint)((cln.TID16 ^ cln.SID16 ^ (cln.PID & 0xFFFF) ^ toSend.ShinyXor) << 16) | (cln.PID & 0xFFFF);
+
+        if (!toSend.ChecksumValid)
+            cln.RefreshChecksum();
+
         var tradeSV = new LegalityAnalysis(cln);
         if (tradeSV.Valid)
         {
-            Log("Pokemon is valid with Trade Partner Info applied. Swapping details.");
+            Log("Pokemon is valid, using trade partner info (AutoOT).");
             await SetBoxPokemonAbsolute(BoxStartOffset, cln, token, sav).ConfigureAwait(false);
-            return true;
         }
         else
         {
-            Log("Pokemon not valid after using Trade Partner Info.");
-            Log(tradeSV.Report());
-            return false;
+            Log("Trade Pokemon can't have AutoOT applied.");
         }
+
+        return tradeSV.Valid;
     }
 
     private async Task<PokeTradeResult> ConfirmAndStartTrading(PokeTradeDetail<PK9> detail, CancellationToken token)
