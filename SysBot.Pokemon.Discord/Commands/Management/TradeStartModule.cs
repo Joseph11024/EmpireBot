@@ -31,6 +31,7 @@ public class TradeStartModule<T> : ModuleBase<SocketCommandContext> where T : PK
     }
 
 #pragma warning disable RCS1158 // Static member in generic type should use a type parameter.
+
     public static void RestoreTradeStarting(DiscordSocketClient discord)
     {
         _discordClient = discord; // Store the DiscordSocketClient instance
@@ -243,7 +244,7 @@ public class TradeStartModule<T> : ModuleBase<SocketCommandContext> where T : PK
         {
             using var httpClient = new HttpClient();
             using var response = await httpClient.GetAsync(imagePath);
-            using var stream = await response.Content.ReadAsStreamAsync();
+            await using var stream = await response.Content.ReadAsStreamAsync();
 #pragma warning disable CA1416 // Validate platform compatibility
             return new Bitmap(stream);
 #pragma warning restore CA1416 // Validate platform compatibility

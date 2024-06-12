@@ -1,17 +1,17 @@
 using PKHeX.Core;
 using SysBot.Base;
+using SysBot.Pokemon.Helpers;
+using SysBot.Pokemon.WinForms.Properties;
 using SysBot.Pokemon.Z3;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using SysBot.Pokemon.Helpers;
-using System.Drawing;
-using SysBot.Pokemon.WinForms.Properties;
 
 namespace SysBot.Pokemon.WinForms;
 
@@ -19,14 +19,16 @@ public sealed partial class Main : Form
 {
     private readonly List<PokeBotState> Bots = [];
 
-
     private IPokeBotRunner RunningEnvironment { get; set; }
+
     private ProgramConfig Config { get; set; }
+
     public static bool IsUpdating { get; set; } = false;
 
     private bool _isFormLoading = true;
 
 #pragma warning disable CS8618
+
     public Main()
 #pragma warning restore CS8618
     {
@@ -120,7 +122,8 @@ public sealed partial class Main : Form
         CB_Protocol.ValueMember = nameof(ComboItem.Value);
         CB_Protocol.DataSource = listP;
         CB_Protocol.SelectedIndex = (int)SwitchProtocol.WiFi; // default option
-                                                              // Populate the game mode dropdown
+
+        // Populate the game mode dropdown
         var gameModes = Enum.GetValues(typeof(ProgramMode))
             .Cast<ProgramMode>()
             .Where(m => m != ProgramMode.None) // Exclude the 'None' value
@@ -155,18 +158,23 @@ public sealed partial class Main : Form
             case "Dark Mode":
                 ApplyDarkTheme();
                 break;
+
             case "Light Mode":
                 ApplyLightTheme();
                 break;
+
             case "Poke Mode":
                 ApplyPokemonTheme();
                 break;
+
             case "Gengar Mode":
                 ApplyGengarTheme();
                 break;
+
             case "Sylveon Mode":
                 ApplySylveonTheme();
                 break;
+
             default:
                 ApplyLightTheme(); 
                 break;
@@ -215,7 +223,8 @@ public sealed partial class Main : Form
     [JsonSerializable(typeof(ProgramConfig))]
     [JsonSourceGenerationOptions(WriteIndented = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
     public sealed partial class ProgramConfigContext : JsonSerializerContext;
-    private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+
+    private void ComboBox1_SelectedIndexChanged(object? sender, EventArgs e)
     {
         if (_isFormLoading) return; // Check to avoid processing during form loading
 
@@ -420,18 +429,23 @@ public sealed partial class Main : Form
                 case "Light Mode":
                     ApplyLightTheme();
                     break;
+
                 case "Dark Mode":
                     ApplyDarkTheme();
                     break;
+
                 case "Poke Mode":
                     ApplyPokemonTheme();
                     break;
+
                 case "Gengar Mode":
                     ApplyGengarTheme();
                     break;
+
                 case "Sylveon Mode":
                     ApplySylveonTheme();
                     break;
+
                 default:
                     ApplyLightTheme();
                     break;
@@ -766,4 +780,4 @@ public sealed partial class Main : Form
             B_Start.ForeColor = SoftWhite;
         }
     }
-
+}

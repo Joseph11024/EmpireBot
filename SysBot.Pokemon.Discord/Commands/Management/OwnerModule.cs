@@ -1,18 +1,18 @@
+using AnimatedGif;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Newtonsoft.Json.Linq;
 using PKHeX.Core;
+using SysBot.Pokemon.Helpers;
 using System;
+using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
-using SysBot.Pokemon.Helpers;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using AnimatedGif;
-using System.Drawing;
 using Color = System.Drawing.Color;
 using DiscordColor = Discord.Color;
 
@@ -20,7 +20,6 @@ namespace SysBot.Pokemon.Discord;
 
 public class OwnerModule<T> : SudoModule<T> where T : PKM, new()
 {
-
     [Command("listguilds")]
     [Alias("lg", "servers", "listservers")]
     [Summary("Lists all guilds the bot is part of.")]
@@ -115,7 +114,6 @@ public class OwnerModule<T> : SudoModule<T> where T : PKM, new()
     [Command("addSudo")]
     [Summary("Adds mentioned user to global sudo")]
     [RequireOwner]
-    // ReSharper disable once UnusedParameter.Global
     public async Task SudoUsers([Remainder] string _)
     {
         var users = Context.Message.MentionedUsers;
@@ -127,7 +125,6 @@ public class OwnerModule<T> : SudoModule<T> where T : PKM, new()
     [Command("removeSudo")]
     [Summary("Removes mentioned user from global sudo")]
     [RequireOwner]
-    // ReSharper disable once UnusedParameter.Global
     public async Task RemoveSudoUsers([Remainder] string _)
     {
         var users = Context.Message.MentionedUsers;
@@ -139,7 +136,6 @@ public class OwnerModule<T> : SudoModule<T> where T : PKM, new()
     [Command("addChannel")]
     [Summary("Adds a channel to the list of channels that are accepting commands.")]
     [RequireOwner]
-    // ReSharper disable once UnusedParameter.Global
     public async Task AddChannel()
     {
         var obj = GetReference(Context.Message.Channel);
@@ -153,8 +149,8 @@ public class OwnerModule<T> : SudoModule<T> where T : PKM, new()
     [RequireOwner]
     public async Task SyncChannels()
     {
-        var whitelist = SysCordSettings.Settings.ChannelWhitelist.List; 
-        var announcementList = SysCordSettings.Settings.AnnouncementChannels.List; 
+        var whitelist = SysCordSettings.Settings.ChannelWhitelist.List;
+        var announcementList = SysCordSettings.Settings.AnnouncementChannels.List;
 
         bool changesMade = false;
 
@@ -180,7 +176,6 @@ public class OwnerModule<T> : SudoModule<T> where T : PKM, new()
     [Command("removeChannel")]
     [Summary("Removes a channel from the list of channels that are accepting commands.")]
     [RequireOwner]
-    // ReSharper disable once UnusedParameter.Global
     public async Task RemoveChannel()
     {
         var obj = GetReference(Context.Message.Channel);
@@ -192,7 +187,6 @@ public class OwnerModule<T> : SudoModule<T> where T : PKM, new()
     [Alias("bye")]
     [Summary("Leaves the current server.")]
     [RequireOwner]
-    // ReSharper disable once UnusedParameter.Global
     public async Task Leave()
     {
         await ReplyAsync("Goodbye.").ConfigureAwait(false);
@@ -203,7 +197,6 @@ public class OwnerModule<T> : SudoModule<T> where T : PKM, new()
     [Alias("lg")]
     [Summary("Leaves guild based on supplied ID.")]
     [RequireOwner]
-    // ReSharper disable once UnusedParameter.Global
     public async Task LeaveGuild(string userInput)
     {
         if (!ulong.TryParse(userInput, out ulong id))
@@ -226,7 +219,6 @@ public class OwnerModule<T> : SudoModule<T> where T : PKM, new()
     [Command("leaveall")]
     [Summary("Leaves all servers the bot is currently in.")]
     [RequireOwner]
-    // ReSharper disable once UnusedParameter.Global
     public async Task LeaveAll()
     {
         await ReplyAsync("Leaving all servers.").ConfigureAwait(false);
@@ -271,10 +263,10 @@ public class OwnerModule<T> : SudoModule<T> where T : PKM, new()
             return;
         }
 
-        using MemoryStream ms = new(bytes);
+        await using MemoryStream ms = new(bytes);
         var img = "cap.jpg";
         var embed = new EmbedBuilder { ImageUrl = $"attachment://{img}", Color = (DiscordColor?)Color.Purple }
-            .WithFooter(new EmbedFooterBuilder { Text = $"Here's your screenshot." });
+            .WithFooter(new EmbedFooterBuilder { Text = "Here's your screenshot." });
 
         await Context.Channel.SendFileAsync(ms, img, embed: embed.Build());
     }
@@ -328,19 +320,13 @@ public class OwnerModule<T> : SudoModule<T> where T : PKM, new()
                         return;
                     }
 
-                    using (var ms = new MemoryStream(bytes))
+                    await using (var ms = new MemoryStream(bytes))
                     {
 #pragma warning disable CA1416 // Validate platform compatibility
                         using var bitmap = new Bitmap(ms);
 #pragma warning restore CA1416 // Validate platform compatibility
 #pragma warning disable CA1416 // Validate platform compatibility
-#pragma warning disable CA1416 // Validate platform compatibility
-#pragma warning disable CA1416 // Validate platform compatibility
-#pragma warning disable CA1416 // Validate platform compatibility
                         var frame = bitmap.Clone(new Rectangle(0, 0, bitmap.Width, bitmap.Height), System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-#pragma warning restore CA1416 // Validate platform compatibility
-#pragma warning restore CA1416 // Validate platform compatibility
-#pragma warning restore CA1416 // Validate platform compatibility
 #pragma warning restore CA1416 // Validate platform compatibility
 #pragma warning disable CA1416 // Validate platform compatibility
                         gifFrames.Add(frame);
@@ -350,7 +336,7 @@ public class OwnerModule<T> : SudoModule<T> where T : PKM, new()
                     await Task.Delay(screenshotInterval).ConfigureAwait(false);
                 }
 
-                using (var ms = new MemoryStream())
+                await using (var ms = new MemoryStream())
                 {
                     using (var gif = new AnimatedGifCreator(ms, 200))
                     {
@@ -396,13 +382,7 @@ public class OwnerModule<T> : SudoModule<T> where T : PKM, new()
             var config = JObject.Parse(jsonData);
 
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
             var ip = config["Bots"][0]["Connection"]["IP"].ToString();
-#pragma warning restore CS8602 // Dereference of a possibly null reference.
-#pragma warning restore CS8602 // Dereference of a possibly null reference.
-#pragma warning restore CS8602 // Dereference of a possibly null reference.
 #pragma warning restore CS8602 // Dereference of a possibly null reference.
             return ip;
         }
@@ -417,7 +397,6 @@ public class OwnerModule<T> : SudoModule<T> where T : PKM, new()
     [Alias("shutdown")]
     [Summary("Causes the entire process to end itself!")]
     [RequireOwner]
-    // ReSharper disable once UnusedParameter.Global
     public async Task ExitProgram()
     {
         await Context.Channel.EchoAndReply("Shutting down... goodbye! **Bot services are going offline.**").ConfigureAwait(false);
