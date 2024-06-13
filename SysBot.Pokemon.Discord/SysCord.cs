@@ -490,7 +490,7 @@ public sealed class SysCord<T> where T : PKM, new()
         {
             if (AbuseSettings.BannedIDs.List.Any(z => z.ID == user.Id))
             {
-                await msg.Channel.SendMessageAsync($"{msg.Author.Mention}, You are blacklisted from using the bots! Contact the bot owner <@620973385899442208> (Owner)!").ConfigureAwait(false);
+                await msg.Channel.SendMessageAsync($"{msg.Author.Mention}, You are banned from using the bots! Contact the bot owner <@620973385899442208>!").ConfigureAwait(false);
                 return true;
             }
         }
@@ -498,13 +498,13 @@ public sealed class SysCord<T> where T : PKM, new()
         var mgr = Manager;
         if (!mgr.CanUseCommandUser(msg.Author.Id))
         {
-            await msg.Channel.SendMessageAsync($"{msg.Author.Mention}, You are blacklisted from using the bots! Contact the bot owner <@620973385899442208> (Owner)!").ConfigureAwait(false);
+            await msg.Channel.SendMessageAsync($"{msg.Author.Mention}, You are banned from using the bots! Contact the bot owner <@620973385899442208>!").ConfigureAwait(false);
             return true;
         }
         if (!mgr.CanUseCommandChannel(msg.Channel.Id) && msg.Author.Id != mgr.Owner)
         {
             if (Hub.Config.Discord.ReplyCannotUseCommandInChannel)
-                await msg.Channel.SendMessageAsync($"{msg.Author.Mention}, You are blacklisted from using the bots! Contact the bot owner <@620973385899442208> (Owner)!").ConfigureAwait(false);
+                await msg.Channel.SendMessageAsync($"{msg.Author.Mention}, You are banned from using the bots! Contact the bot owner <@620973385899442208>!").ConfigureAwait(false);
             return true;
         }
 
