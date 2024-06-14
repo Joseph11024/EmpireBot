@@ -152,7 +152,7 @@ public class TradeModule<T> : ModuleBase<SocketCommandContext> where T : PKM, ne
         var template = AutoLegalityWrapper.GetTemplate(set);
         var sav = AutoLegalityWrapper.GetTrainerInfo<T>();
         var pkm = sav.GetLegal(template, out var result);
-        AbstractTrade<T>.DittoTrade((T)pkm);
+        TradeExtensions<T>.DittoTrade((T)pkm);
         var la = new LegalityAnalysis(pkm);
 
         if (pkm is not T pk || !la.Valid)
@@ -293,7 +293,7 @@ public class TradeModule<T> : ModuleBase<SocketCommandContext> where T : PKM, ne
 
             // Use the EggTrade method without setting the nickname
             pk.IsNicknamed = false; // Make sure we don't set a nickname
-            AbstractTrade<T>.EggTrade(pk, template);
+            TradeExtensions<T>.EggTrade(pk, template);
 
             var sig = Context.User.GetFavor();
             await AddTradeToQueueAsync(code, Context.User.Username, pk, sig, Context.User).ConfigureAwait(false);
@@ -339,9 +339,9 @@ public class TradeModule<T> : ModuleBase<SocketCommandContext> where T : PKM, ne
         }
         var ignoreAutoOT = content.Contains("OT:") || content.Contains("TID:") || content.Contains("SID:");
         content = ReusableActions.StripCodeBlock(content);
+        content = ConvertMasterBall(content); // Temp fix for Ball: Master being unrecognized by the bot
         var set = new ShowdownSet(content);
         var template = AutoLegalityWrapper.GetTemplate(set);
-        int formArgument = ExtractFormArgument(content);
 
         if (set.InvalidLines.Count != 0)
         {
@@ -518,9 +518,10 @@ public class TradeModule<T> : ModuleBase<SocketCommandContext> where T : PKM, ne
 
         var ignoreAutoOT = content.Contains("OT:") || content.Contains("TID:") || content.Contains("SID:");
         content = ReusableActions.StripCodeBlock(content);
+        content = ConvertMasterBall(content); // Temp fix for Ball: Master not being recognized by the bot
         var set = new ShowdownSet(content);
         var template = AutoLegalityWrapper.GetTemplate(set);
-        int formArgument = ExtractFormArgument(content);
+
         if (set.InvalidLines.Count != 0)
         {
             var msg = $"Unable to parse Showdown Set:\n{string.Join("\n", set.InvalidLines)}";
@@ -663,16 +664,6 @@ public class TradeModule<T> : ModuleBase<SocketCommandContext> where T : PKM, ne
         {
             _ = DeleteMessagesAfterDelayAsync(userMessage, null, 2);
         }
-    }
-
-    private static int ExtractFormArgument(string content)
-    {
-        var match = Regex.Match(content, @"\.FormArgument=(\d+)");
-        if (match.Success)
-        {
-            return int.Parse(match.Groups[1].Value);
-        }
-        return 0;
     }
 
     [Command("batchTrade")]
@@ -1391,6 +1382,19 @@ public class TradeModule<T> : ModuleBase<SocketCommandContext> where T : PKM, ne
             T pk => pk,
             _ => EntityConverter.ConvertToType(dl.Data, typeof(T), out _) as T,
         };
+    }
+
+    private string ConvertMasterBall(string content)
+    {
+        var lines = content.Split('\n');
+        for (int i = 0; i < lines.Length; i++)
+        {
+            if (lines[i].StartsWith("Ball:") && lines[i].Contains("Master"))
+            {
+                lines[i] = ".Ball=1";
+            }
+        }
+        return string.Join('\n', lines);
     }
 
     private async Task AddTradeToQueueAsync(int code, string trainerName, T? pk, RequestSignificance sig, SocketUser usr, bool isBatchTrade = false, int batchTradeNumber = 1, int totalBatchTrades = 1, bool isHiddenTrade = false, bool isMysteryEgg = false, List<Pictocodes>? lgcode = null, PokeTradeType tradeType = PokeTradeType.Specific, bool ignoreAutoOT = false, bool setEdited = false)
