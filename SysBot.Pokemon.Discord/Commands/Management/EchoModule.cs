@@ -136,13 +136,12 @@ namespace SysBot.Pokemon.Discord
         {
             var thumbnailOptions = new List<string>
     {
-        "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/gengarmegaphone.png",
-        "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/pikachumegaphone.png",
-        "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/umbreonmegaphone.png",
-        "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/sylveonmegaphone.png",
-        "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/charmandermegaphone.png",
-        "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/jigglypuffmegaphone.png",
-        "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/flareonmegaphone.png",
+        "https://media.discordapp.net/attachments/1152944125818183681/1218757568432836628/Announcement_1.png?ex=66cbf16f&is=66ca9fef&hm=fa04425cf073a456d1d28e6d348630f478a69c6d43c45bfdabfce4c0fa5ac119&=&format=webp&quality=lossless&width=970&height=988",
+        "https://media.discordapp.net/attachments/1152944125818183681/1218757568839548928/Announcement_2.png?ex=66cbf16f&is=66ca9fef&hm=73148f7708a04dbdbcb28268940d2ddd19a323b81ab3073a2dedd3d160b056e7&=&format=webp&quality=lossless&width=970&height=988",
+        "https://media.discordapp.net/attachments/1152944125818183681/1218757569175228507/Announcement_3.png?ex=66cbf16f&is=66ca9fef&hm=0bd21152db0ea3b8abff7b9c49c829a8db2f95c4055c9141db4bd414286beac9&=&format=webp&quality=lossless&width=1002&height=988",
+        "https://media.discordapp.net/attachments/1152944125818183681/1218757569510637718/Announcement_4.png?ex=66cbf16f&is=66ca9fef&hm=ceb3cd08dbbffbd5121f0b58ec0ece5e2e671c3bf9a40b60b62330ababe3c1b5&=&format=webp&quality=lossless&width=1002&height=988",
+        "https://media.discordapp.net/attachments/1152944125818183681/1218757569808695327/Announcement_5.png?ex=66cbf170&is=66ca9ff0&hm=4de814470fe82427d385333d4138d267ae847184c49f2bf32b1ebc42a9b4d061&=&format=webp&quality=lossless&width=1002&height=988",
+        "https://media.discordapp.net/attachments/1152944125818183681/1218757570131529778/BotDM.png?ex=66cbf170&is=66ca9ff0&hm=fad569015288a4c56b41e66fb013323f4e057b0a0cdf89abf95ce274dc7c377c&=&format=webp&quality=lossless&width=970&height=988",
     };
             var random = new Random();
             return thumbnailOptions[random.Next(thumbnailOptions.Count)];
@@ -166,14 +165,13 @@ namespace SysBot.Pokemon.Discord
         {
             return option switch
             {
-                ThumbnailOption.Gengar => "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/gengarmegaphone.png",
-                ThumbnailOption.Pikachu => "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/pikachumegaphone.png",
-                ThumbnailOption.Umbreon => "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/umbreonmegaphone.png",
-                ThumbnailOption.Sylveon => "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/sylveonmegaphone.png",
-                ThumbnailOption.Charmander => "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/charmandermegaphone.png",
-                ThumbnailOption.Jigglypuff => "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/jigglypuffmegaphone.png",
-                ThumbnailOption.Flareon => "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/flareonmegaphone.png",
-                _ => "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/gengarmegaphone.png",
+                ThumbnailOption.Gengar => "https://media.discordapp.net/attachments/1152944125818183681/1218757568432836628/Announcement_1.png?ex=66cbf16f&is=66ca9fef&hm=fa04425cf073a456d1d28e6d348630f478a69c6d43c45bfdabfce4c0fa5ac119&=&format=webp&quality=lossless&width=970&height=988",
+                ThumbnailOption.Pikachu => "https://media.discordapp.net/attachments/1152944125818183681/1218757568839548928/Announcement_2.png?ex=66cbf16f&is=66ca9fef&hm=73148f7708a04dbdbcb28268940d2ddd19a323b81ab3073a2dedd3d160b056e7&=&format=webp&quality=lossless&width=970&height=988",
+                ThumbnailOption.Umbreon => "https://media.discordapp.net/attachments/1152944125818183681/1218757569175228507/Announcement_3.png?ex=66cbf16f&is=66ca9fef&hm=0bd21152db0ea3b8abff7b9c49c829a8db2f95c4055c9141db4bd414286beac9&=&format=webp&quality=lossless&width=1002&height=988",
+                ThumbnailOption.Sylveon => "https://media.discordapp.net/attachments/1152944125818183681/1218757569510637718/Announcement_4.png?ex=66cbf16f&is=66ca9fef&hm=ceb3cd08dbbffbd5121f0b58ec0ece5e2e671c3bf9a40b60b62330ababe3c1b5&=&format=webp&quality=lossless&width=1002&height=988",
+                ThumbnailOption.Charmander => "https://media.discordapp.net/attachments/1152944125818183681/1218757569808695327/Announcement_5.png?ex=66cbf170&is=66ca9ff0&hm=4de814470fe82427d385333d4138d267ae847184c49f2bf32b1ebc42a9b4d061&=&format=webp&quality=lossless&width=1002&height=988",
+                ThumbnailOption.Jigglypuff => "https://media.discordapp.net/attachments/1152944125818183681/1218757570131529778/BotDM.png?ex=66cbf170&is=66ca9ff0&hm=fad569015288a4c56b41e66fb013323f4e057b0a0cdf89abf95ce274dc7c377c&=&format=webp&quality=lossless&width=970&height=988",
+                _ => "https://media.discordapp.net/attachments/1152944125818183681/1156976174904393780/773CFB29-C47B-4845-B0B9-9559CD11BB78.jpg?ex=66cbf6c7&is=66caa547&hm=50f3595986ed9b7950cafee1a6fb2157920ca1f8bf4a646f29fc9c19915b155f&=&format=webp&width=1016&height=986",
             };
         }
 
