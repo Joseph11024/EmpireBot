@@ -15,7 +15,7 @@ namespace SysBot.Pokemon.Discord
         private static TradeQueueInfo<T> Info => SysCord<T>.Runner.Hub.Queues.Info;
 
         [Command("mysterymon")]
-        [Alias("mm")]
+        [Alias("mm", "mt", "st")]
         [Summary("Trades a random Pokémon with perfect stats and shiny appearance.")]
         public async Task TradeRandomPokemonAsync()
         {
@@ -33,7 +33,7 @@ namespace SysBot.Pokemon.Discord
         }
 
         [Command("mysterymon")]
-        [Alias("mm")]
+        [Alias("mm", "mt", "st")]
         [Summary("Trades a random Pokémon with perfect stats and shiny appearance.")]
         [RequireQueueRole(nameof(DiscordManager.RolesTrade))]
         public async Task TradeRandomPokemonAsync([Summary("Trade Code")] int code)
