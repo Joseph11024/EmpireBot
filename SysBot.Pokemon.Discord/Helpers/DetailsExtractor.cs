@@ -38,10 +38,10 @@ public static class DetailsExtractor<T> where T : PKM, new()
         embedBuilder.AddField("**Moves:**", embedData.MovesDisplay, inline: true);
     }
 
-    public static void AddSpecialTradeFields(EmbedBuilder embedBuilder, bool isMysteryEgg, bool isSpecialRequest, bool isCloneRequest, bool isFixOTRequest, string trainerMention)
+    public static void AddSpecialTradeFields(EmbedBuilder embedBuilder, bool isMysteryMon, bool isMysteryEgg, bool isSpecialRequest, bool isCloneRequest, bool isFixOTRequest, string trainerMention)
     {
         string specialDescription = $"**Trainer:** {trainerMention}\n" +
-                                    (isMysteryEgg ? "Mystery Egg" : isSpecialRequest ? "Special Request" : isCloneRequest ? "Clone Request" : isFixOTRequest ? "FixOT Request" : "Dump Request");
+                                    (isMysteryMon ? "Mystery Pokemon" : isMysteryEgg ? "Mystery Egg" : isSpecialRequest ? "Special Request" : isCloneRequest ? "Clone Request" : isFixOTRequest ? "FixOT Request" : "Dump Request");
         embedBuilder.AddField("\u200B", specialDescription, inline: false);
     }
 
@@ -57,7 +57,7 @@ public static class DetailsExtractor<T> where T : PKM, new()
         }
     }
 
-    public static EmbedData ExtractPokemonDetails(T pk, SocketUser user, bool isMysteryEgg, bool isCloneRequest, bool isDumpRequest, bool isFixOTRequest, bool isSpecialRequest, bool isBatchTrade, int batchTradeNumber, int totalBatchTrades)
+    public static EmbedData ExtractPokemonDetails(T pk, SocketUser user, bool isMysteryMon, bool isMysteryEgg, bool isCloneRequest, bool isDumpRequest, bool isFixOTRequest, bool isSpecialRequest, bool isBatchTrade, int batchTradeNumber, int totalBatchTrades)
     {
         var strings = GameInfo.GetStrings(1);
         var embedData = new EmbedData
@@ -117,10 +117,10 @@ public static class DetailsExtractor<T> where T : PKM, new()
         embedData.PokemonDisplayName = pk.IsNicknamed ? pk.Nickname : embedData.SpeciesName;
 
         // Trade title
-        embedData.TradeTitle = GetTradeTitle(isMysteryEgg, isCloneRequest, isDumpRequest, isFixOTRequest, isSpecialRequest, isBatchTrade, batchTradeNumber, embedData.PokemonDisplayName, pk.IsShiny);
+        embedData.TradeTitle = GetTradeTitle(isMysteryMon, isMysteryEgg, isCloneRequest, isDumpRequest, isFixOTRequest, isSpecialRequest, isBatchTrade, batchTradeNumber, embedData.PokemonDisplayName, pk.IsShiny);
 
         // Author name
-        embedData.AuthorName = GetAuthorName(user.Username, embedData.TradeTitle, isMysteryEgg, isFixOTRequest, isCloneRequest, isDumpRequest, isSpecialRequest, isBatchTrade, embedData.PokemonDisplayName, pk.IsShiny);
+        embedData.AuthorName = GetAuthorName(user.Username, embedData.TradeTitle, isMysteryMon, isMysteryEgg, isFixOTRequest, isCloneRequest, isDumpRequest, isSpecialRequest, isBatchTrade, embedData.PokemonDisplayName, pk.IsShiny);
 
         return embedData;
     }
@@ -155,10 +155,10 @@ public static class DetailsExtractor<T> where T : PKM, new()
         return GameInfo.AbilityDataSource.FirstOrDefault(a => a.Value == pk.Ability)?.Text ?? "";
     }
 
-    private static string GetAuthorName(string username, string tradeTitle, bool isMysteryEgg, bool isFixOTRequest, bool isCloneRequest, bool isDumpRequest, bool isSpecialRequest, bool isBatchTrade, string pokemonDisplayName, bool isShiny)
+    private static string GetAuthorName(string username, string tradeTitle, bool isMysteryMon, bool isMysteryEgg, bool isFixOTRequest, bool isCloneRequest, bool isDumpRequest, bool isSpecialRequest, bool isBatchTrade, string pokemonDisplayName, bool isShiny)
     {
         string isPkmShiny = isShiny ? "Shiny " : "";
-        return isMysteryEgg || isFixOTRequest || isCloneRequest || isDumpRequest || isSpecialRequest || isBatchTrade ?
+        return isMysteryMon || isMysteryEgg || isFixOTRequest || isCloneRequest || isDumpRequest || isSpecialRequest || isBatchTrade ?
                $"{username}'s {tradeTitle}" :
                $"{username}'s {isPkmShiny}{pokemonDisplayName}";
     }
@@ -257,10 +257,11 @@ public static class DetailsExtractor<T> where T : PKM, new()
         return teraType.ToString();
     }
 
-    private static string GetTradeTitle(bool isMysteryEgg, bool isCloneRequest, bool isDumpRequest, bool isFixOTRequest, bool isSpecialRequest, bool isBatchTrade, int batchTradeNumber, string pokemonDisplayName, bool isShiny)
+    private static string GetTradeTitle(bool isMysteryMon, bool isMysteryEgg, bool isCloneRequest, bool isDumpRequest, bool isFixOTRequest, bool isSpecialRequest, bool isBatchTrade, int batchTradeNumber, string pokemonDisplayName, bool isShiny)
     {
         string shinyEmoji = isShiny ? "✨ " : "";
-        return isMysteryEgg ? "✨ Shiny Mystery Egg ✨" :
+        return isMysteryMon ? "✨ Mystery Pokemon ✨" :
+               isMysteryEgg ? "✨ Shiny Mystery Egg ✨" :
                isBatchTrade ? $"Batch Trade #{batchTradeNumber} - {shinyEmoji}{pokemonDisplayName}" :
                isFixOTRequest ? "FixOT Request" :
                isSpecialRequest ? "Special Request" :

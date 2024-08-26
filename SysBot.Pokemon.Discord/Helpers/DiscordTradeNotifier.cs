@@ -30,7 +30,9 @@ public class DiscordTradeNotifier<T> : IPokeTradeNotifier<T>
 
     private bool IsMysteryEgg { get; }
 
-    public DiscordTradeNotifier(T data, PokeTradeTrainerInfo info, int code, SocketUser trader, int batchTradeNumber, int totalBatchTrades, bool isMysteryEgg, List<Pictocodes> lgcode)
+    private bool IsMysteryMon { get; }
+
+    public DiscordTradeNotifier(T data, PokeTradeTrainerInfo info, int code, SocketUser trader, int batchTradeNumber, int totalBatchTrades, bool isMysteryMon, bool isMysteryEgg, List<Pictocodes> lgcode)
     {
         Data = data;
         Info = info;
@@ -39,6 +41,7 @@ public class DiscordTradeNotifier<T> : IPokeTradeNotifier<T>
         BatchTradeNumber = batchTradeNumber;
         TotalBatchTrades = totalBatchTrades;
         IsMysteryEgg = isMysteryEgg;
+        IsMysteryMon = isMysteryMon;
         LGCode = lgcode;
     }
 
@@ -51,7 +54,7 @@ public class DiscordTradeNotifier<T> : IPokeTradeNotifier<T>
         int language = 2;
         var speciesName = SpeciesName.GetSpeciesName(Data.Species, language);
         var batchInfo = TotalBatchTrades > 1 ? $" (Trade {BatchTradeNumber} of {TotalBatchTrades})" : "";
-        var receive = Data.Species == 0 ? string.Empty : $" ({Data.Nickname})";
+        var receive = IsMysteryMon ? " (Mystery Pokemon)" : Data.Species == 0 ? string.Empty : $" ({Data.Nickname})";
 
         if (Data is PK9)
         {
@@ -62,7 +65,7 @@ public class DiscordTradeNotifier<T> : IPokeTradeNotifier<T>
                 message += "\n**Please stay in the trade until all batch trades are completed.**";
             }
 
-            EmbedHelper.SendTradeInitializingEmbedAsync(Trader, speciesName, Code, IsMysteryEgg, message).ConfigureAwait(false);
+            EmbedHelper.SendTradeInitializingEmbedAsync(Trader, speciesName, Code, IsMysteryMon, IsMysteryEgg, message).ConfigureAwait(false);
         }
         else if (Data is PB7)
         {
@@ -71,7 +74,7 @@ public class DiscordTradeNotifier<T> : IPokeTradeNotifier<T>
         }
         else
         {
-            EmbedHelper.SendTradeInitializingEmbedAsync(Trader, speciesName, Code, IsMysteryEgg).ConfigureAwait(false);
+            EmbedHelper.SendTradeInitializingEmbedAsync(Trader, speciesName, Code, IsMysteryMon, IsMysteryEgg).ConfigureAwait(false);
         }
     }
 
@@ -109,8 +112,8 @@ public class DiscordTradeNotifier<T> : IPokeTradeNotifier<T>
     {
         OnFinish?.Invoke(routine);
         var tradedToUser = Data.Species;
-        var message = tradedToUser != 0 ? (info.IsMysteryEgg ? "Enjoy your **Mystery Egg**!" : $"Enjoy your **{(Species)tradedToUser}**!") : "Trade finished!";
-        EmbedHelper.SendTradeFinishedEmbedAsync(Trader, message, Data, info.IsMysteryEgg).ConfigureAwait(false);
+        var message = tradedToUser != 0 ? (info.IsMysteryMon ? "Enjoy your **Mystery Pokemon**!" : info.IsMysteryEgg ? "Enjoy your **Mystery Egg**!" : $"Enjoy your **{(Species)tradedToUser}**!") : "Trade finished!";
+        EmbedHelper.SendTradeFinishedEmbedAsync(Trader, message, Data, info.IsMysteryMon, info.IsMysteryEgg).ConfigureAwait(false);
         if (result.Species != 0 && Hub.Config.Discord.ReturnPKMs)
             Trader.SendPKMAsync(result, "Here's what you traded me!").ConfigureAwait(false);
     }

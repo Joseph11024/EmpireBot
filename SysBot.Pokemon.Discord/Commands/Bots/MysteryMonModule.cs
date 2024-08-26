@@ -82,7 +82,7 @@ namespace SysBot.Pokemon.Discord
                 }
 
                 var sig = Context.User.GetFavor();
-                await AddTradeToQueueAsync(code, Context.User.Username, pk, sig, Context.User).ConfigureAwait(false);
+                await AddTradeToQueueAsync(code, Context.User.Username, pk, sig, Context.User, isMysteryMon: true).ConfigureAwait(false);
 
                 if (Context.Message is IUserMessage userMessage)
                 {
@@ -342,7 +342,7 @@ namespace SysBot.Pokemon.Discord
             };
         }
 
-        private async Task AddTradeToQueueAsync(int code, string trainerName, T? pk, RequestSignificance sig, SocketUser usr, bool isBatchTrade = false, int batchTradeNumber = 1, int totalBatchTrades = 1, bool isHiddenTrade = false)
+        private async Task AddTradeToQueueAsync(int code, string trainerName, T? pk, RequestSignificance sig, SocketUser usr, bool isBatchTrade = false, int batchTradeNumber = 1, int totalBatchTrades = 1, bool isHiddenTrade = false, bool isMysteryMon = false)
         {
             var la = new LegalityAnalysis(pk);
             if (!la.Valid)
@@ -357,7 +357,7 @@ namespace SysBot.Pokemon.Discord
                 return;
             }
 
-            await QueueHelper<T>.AddToQueueAsync(Context, code, trainerName, sig, pk, PokeRoutineType.LinkTrade, PokeTradeType.Specific, usr, isBatchTrade, batchTradeNumber, totalBatchTrades, isHiddenTrade).ConfigureAwait(false);
+            await QueueHelper<T>.AddToQueueAsync(Context, code, trainerName, sig, pk, PokeRoutineType.LinkTrade, PokeTradeType.Specific, usr, isBatchTrade, batchTradeNumber, totalBatchTrades, isHiddenTrade, isMysteryMon).ConfigureAwait(false);
         }
     }
 }
