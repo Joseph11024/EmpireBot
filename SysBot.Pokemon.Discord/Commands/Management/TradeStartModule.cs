@@ -116,7 +116,7 @@ public class TradeStartModule<T> : ModuleBase<SocketCommandContext> where T : PK
 
             string footerText = detail.Type == PokeTradeType.Clone || detail.Type == PokeTradeType.Dump || detail.Type == PokeTradeType.Seed || detail.Type == PokeTradeType.FixOT
                 ? "Initializing trade now."
-                : $"Initializing trade now. Enjoy your {(detail.IsMysteryMon ? "🎭 Pokemon Misterioso 🎭" : detail.IsMysteryEgg ? "✨ Mystery Egg" : speciesName)}!";
+                : $"Initializing trade now. Enjoy your {(detail.IsMysteryMon ? "🎭 Mystery Pokemon 🎭" : detail.IsMysteryEgg ? "✨ Mystery Egg" : speciesName)}!";
 
             var embed = new EmbedBuilder()
                 .WithColor(new DiscordColor(r, g, b))
