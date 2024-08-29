@@ -20,7 +20,7 @@ public class InfoModule : ModuleBase<SocketCommandContext>
 
     private const ulong DisallowedUserId = 195756980873199618;
 
-    private const string repo = "https://github.com/bdawg1989/MergeBot";
+    private const string repo = "https://github.com/Joseph11024/EmpireBot";
 
     [Command("info")]
     [Alias("about", "whoami", "owner")]
