@@ -225,7 +225,7 @@ public static class DetailsExtractor<T> where T : PKM, new()
             TradeExtensions<T>.HasMark(ribbonIndex, out RibbonIndex result, out markTitle);
         }
         string alphaSymbol = (pk is IAlpha alpha && alpha.IsAlpha) ? SysCord<T>.Runner.Config.Trade.TradeEmbedSettings.AlphaPLAEmoji.EmojiString : string.Empty;
-        string shinySymbol = pk.ShinyXor == 0 ? ":GreenSaber:  " : pk.IsShiny ? "★ " : string.Empty;
+        string shinySymbol = pk.ShinyXor == 0 ? "<:GreenSaber:1160734498980372662>  " : pk.IsShiny ? "★ " : string.Empty;
         string genderSymbol = GameInfo.GenderSymbolASCII[pk.Gender];
         string maleEmojiString = SysCord<T>.Runner.Config.Trade.TradeEmbedSettings.MaleEmoji.EmojiString;
         string femaleEmojiString = SysCord<T>.Runner.Config.Trade.TradeEmbedSettings.FemaleEmoji.EmojiString;
