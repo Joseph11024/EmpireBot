@@ -75,7 +75,7 @@ public sealed class GengarNamer : IFileNamer<PKM>
         if (!pk.IsShiny)
             return string.Empty;
         if (pk.Format >= 8 && (pk.ShinyXor == 0 || pk.FatefulEncounter || pk.Version == GameVersion.GO))
-            return " <:GreenSaber:1160734498980372662> ";
+            return " \<:SquareShiny:1279047771093073980> ";
         return " ★";
     }
 
