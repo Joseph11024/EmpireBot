@@ -41,8 +41,6 @@ namespace SysBot.Pokemon.Discord
                     await ReplyAsync("An error occurred while processing the request.").ConfigureAwait(false);
                 }
             });
-
-            await ReplyAsync("Your mystery egg trade request has been queued. Please wait for it to be processed.").ConfigureAwait(false);
         }
 
         private async Task ProcessMysteryEggTradeAsync(int code)
