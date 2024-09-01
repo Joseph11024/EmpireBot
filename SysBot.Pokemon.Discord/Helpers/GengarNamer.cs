@@ -75,7 +75,7 @@ public sealed class GengarNamer : IFileNamer<PKM>
         if (!pk.IsShiny)
             return string.Empty;
         if (pk.Format >= 8 && (pk.ShinyXor == 0 || pk.FatefulEncounter || pk.Version == GameVersion.GO))
-            return " <:SquareShiny:1279047771093073980> ";
+            return " <:SquareShiny:1279377764859772948> ";
         return " ★";
     }
 

@@ -3,6 +3,7 @@ using Discord.WebSocket;
 using PKHeX.Core;
 using PKHeX.Core.AutoMod;
 using SysBot.Base;
+using SysBot.Pokemon.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -40,6 +41,9 @@ public static class AutoLegalityExtensionsDiscord
                 await channel.SendMessageAsync(imsg).ConfigureAwait(false);
                 return;
             }
+            // Specie Img
+            bool canGmax = pkm is PK8 pk8 && pk8.CanGigantamax;
+            var speciesImage = TradeExtensions<PK9>.PokeImg(pkm, canGmax, false);
 
             // Create RegenTemplate from the legalized PKM
             var regenTemplate = new RegenTemplate(pkm);
@@ -58,6 +62,7 @@ public static class AutoLegalityExtensionsDiscord
 
             // Create embed
             var embed = new EmbedBuilder()
+                .WithThumbnailUrl(speciesImage)
                 .WithTitle($"Legalized RegenTemplate for {speciesForm}")
                 .WithDescription($"Result: {result}\nEncounter: {la.EncounterOriginal.Name}")
                 .AddField("RegenTemplate", $"```{regenText}```")
