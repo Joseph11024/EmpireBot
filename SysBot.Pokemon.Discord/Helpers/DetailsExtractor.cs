@@ -41,7 +41,7 @@ public static class DetailsExtractor<T> where T : PKM, new()
     public static void AddSpecialTradeFields(EmbedBuilder embedBuilder, bool isMysteryMon, bool isMysteryEgg, bool isSpecialRequest, bool isCloneRequest, bool isFixOTRequest, string trainerMention)
     {
         string specialDescription = $"**Trainer:** {trainerMention}\n" +
-                                    (isMysteryMon ? "Mystery Pokemon" : isMysteryEgg ? "Mystery Egg" : isSpecialRequest ? "Special Request" : isCloneRequest ? "Clone Request" : isFixOTRequest ? "FixOT Request" : "Dump Request");
+                                    (isMysteryMon ? "Mystery Pokémon" : isMysteryEgg ? "Mystery Egg" : isSpecialRequest ? "Special Request" : isCloneRequest ? "Clone Request" : isFixOTRequest ? "FixOT Request" : "Dump Request");
         embedBuilder.AddField("\u200B", specialDescription, inline: false);
     }
 
@@ -260,7 +260,7 @@ public static class DetailsExtractor<T> where T : PKM, new()
     private static string GetTradeTitle(bool isMysteryMon, bool isMysteryEgg, bool isCloneRequest, bool isDumpRequest, bool isFixOTRequest, bool isSpecialRequest, bool isBatchTrade, int batchTradeNumber, string pokemonDisplayName, bool isShiny)
     {
         string shinyEmoji = isShiny ? "✨ " : "";
-        return isMysteryMon ? "✨ Mystery Pokemon ✨" :
+        return isMysteryMon ? "✨ Mystery Pokémon ✨" :
                isMysteryEgg ? "✨ Shiny Mystery Egg ✨" :
                isBatchTrade ? $"Batch Trade #{batchTradeNumber} - {shinyEmoji}{pokemonDisplayName}" :
                isFixOTRequest ? "FixOT Request" :

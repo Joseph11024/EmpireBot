@@ -84,7 +84,7 @@ public static class EmbedHelper
         }
         else if (isMysteryMon)
         {
-            speciesName = "**Mystery Pokemon**";
+            speciesName = "**Mystery Pokémon**";
         }
 
         var embed = new EmbedBuilder()

@@ -94,7 +94,7 @@ public class TradeStartModule<T> : ModuleBase<SocketCommandContext> where T : PK
                 ballImgUrl = $"https://raw.githubusercontent.com/bdawg1989/sprites/main/AltBallImg/28x28/{ballName}.png";
             }
 
-            string tradeTitle = detail.IsMysteryMon ? "🎭 Mystery Pokemon 🎭" : detail.IsMysteryEgg ? "✨ Mystery Egg" : detail.Type switch
+            string tradeTitle = detail.IsMysteryMon ? "✨ Mystery Pokémon" : detail.IsMysteryEgg ? "✨ Mystery Egg" : detail.Type switch
             {
                 PokeTradeType.Clone => "Cloned Pokémon",
                 PokeTradeType.Dump => "Pokémon Dump",
@@ -116,7 +116,7 @@ public class TradeStartModule<T> : ModuleBase<SocketCommandContext> where T : PK
 
             string footerText = detail.Type == PokeTradeType.Clone || detail.Type == PokeTradeType.Dump || detail.Type == PokeTradeType.Seed || detail.Type == PokeTradeType.FixOT
                 ? "Initializing trade now."
-                : $"Initializing trade now. Enjoy your {(detail.IsMysteryMon ? "🎭 Mystery Pokemon 🎭" : detail.IsMysteryEgg ? "✨ Mystery Egg" : speciesName)}!";
+                : $"Initializing trade now. Enjoy your {(detail.IsMysteryMon ? "✨ Mystery Pokémon" : detail.IsMysteryEgg ? "✨ Mystery Egg" : speciesName)}!";
 
             var embed = new EmbedBuilder()
                 .WithColor(new DiscordColor(r, g, b))

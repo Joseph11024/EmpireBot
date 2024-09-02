@@ -54,7 +54,7 @@ public class DiscordTradeNotifier<T> : IPokeTradeNotifier<T>
         int language = 2;
         var speciesName = SpeciesName.GetSpeciesName(Data.Species, language);
         var batchInfo = TotalBatchTrades > 1 ? $" (Trade {BatchTradeNumber} of {TotalBatchTrades})" : "";
-        var receive = IsMysteryMon ? " (Mystery Pokemon)" : Data.Species == 0 ? string.Empty : $" ({Data.Nickname})";
+        var receive = IsMysteryMon ? " (Mystery Pokémon)" : (Data.Species == 0 ? string.Empty : $" ({Data.Nickname})");
 
         if (Data is PK9)
         {
@@ -112,7 +112,7 @@ public class DiscordTradeNotifier<T> : IPokeTradeNotifier<T>
     {
         OnFinish?.Invoke(routine);
         var tradedToUser = Data.Species;
-        var message = tradedToUser != 0 ? (info.IsMysteryMon ? "Enjoy your **Mystery Pokemon**!" : info.IsMysteryEgg ? "Enjoy your **Mystery Egg**!" : $"Enjoy your **{(Species)tradedToUser}**!") : "Trade finished!";
+        var message = tradedToUser != 0 ? (info.IsMysteryMon ? "Enjoy your **Mystery Pokémon**!" : info.IsMysteryEgg ? "Enjoy your **Mystery Egg**!" : $"Enjoy your **{(Species)tradedToUser}**!") : "Trade finished!";
         EmbedHelper.SendTradeFinishedEmbedAsync(Trader, message, Data, info.IsMysteryMon, info.IsMysteryEgg).ConfigureAwait(false);
         if (result.Species != 0 && Hub.Config.Discord.ReturnPKMs)
             Trader.SendPKMAsync(result, "Here's what you traded me!").ConfigureAwait(false);
