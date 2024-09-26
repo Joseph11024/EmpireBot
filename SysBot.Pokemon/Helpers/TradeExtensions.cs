@@ -542,6 +542,7 @@ namespace SysBot.Pokemon.Helpers
 
             // Generation 5
             [(int)Species.Emboar] =     [(new(2024, 06, 14), new(2024, 06, 16)), (new(2024, 06, 21), new(2024, 06, 23))], // Emboar
+            [(int)Species.Serperior] = [(new(2024, 09, 20), new(2024, 09, 22)), (new(2024, 09, 27), new(2024, 09, 29))], // Serperior
 
             // Generation 6
             [(int)Species.Chesnaught] = [(new(2023, 05, 12), new(2023, 05, 14)), (new(2023, 06, 16), new(2023, 06, 18))], // Chesnaught
