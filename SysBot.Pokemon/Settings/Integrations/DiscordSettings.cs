@@ -69,6 +69,9 @@ public class DiscordSettings
     [Category(Channels), Description("Channels that will log special messages, like announcements.")]
     public RemoteControlAccessList AnnouncementChannels { get; set; } = new();
 
+    [Category(Channels), Description("Channels that will log abuse messages.")]
+    public RemoteControlAccessList AbuseLogChannels { get; set; } = new();
+
     public AnnouncementSettingsCategory AnnouncementSettings { get; set; } = new();
 
     [Category(Startup), Description("Toggle to handle commands asynchronously or synchronously.")]

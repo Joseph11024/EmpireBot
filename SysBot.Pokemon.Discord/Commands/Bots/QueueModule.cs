@@ -3,6 +3,7 @@ using Discord.Commands;
 using PKHeX.Core;
 using SysBot.Base;
 using System;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace SysBot.Pokemon.Discord;
@@ -195,5 +196,100 @@ public class QueueModule<T> : ModuleBase<SocketCommandContext> where T : PKM, ne
         {
             LogUtil.LogSafe(ex, nameof(QueueModule<T>));
         }
+    }
+
+    [Command("changeTradeCode")]
+    [Alias("ctc")]
+    [Summary("Changes the user's trade code if trade code storage is turned on.")]
+    public async Task ChangeTradeCodeAsync([Summary("New 8-digit trade code")] string newCode)
+    {
+        // Delete user's message immediately to protect the trade code
+        await Context.Message.DeleteAsync().ConfigureAwait(false);
+
+        var userID = Context.User.Id;
+        var tradeCodeStorage = new TradeCodeStorage();
+
+        if (!QueueModule<T>.ValidateTradeCode(newCode, out string errorMessage))
+        {
+            await SendTemporaryMessageAsync(errorMessage).ConfigureAwait(false);
+            return;
+        }
+
+        try
+        {
+            int code = int.Parse(newCode);
+            var existingDetails = tradeCodeStorage.GetTradeDetails(userID);
+
+            if (existingDetails == null)
+            {
+                await SendTemporaryMessageAsync("You don't have a trade code set. Use the trade command to generate one first.").ConfigureAwait(false);
+                return;
+            }
+
+            existingDetails.Code = code;
+            tradeCodeStorage.UpdateTradeDetails(userID, existingDetails.OT, existingDetails.TID, existingDetails.SID);
+
+            await SendTemporaryMessageAsync("Your trade code has been successfully updated.").ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            LogUtil.LogError($"Error changing trade code for user {userID}: {ex.Message}", nameof(QueueModule<T>));
+            await SendTemporaryMessageAsync("An error occurred while changing your trade code. Please try again later.").ConfigureAwait(false);
+        }
+    }
+
+    private async Task SendTemporaryMessageAsync(string message)
+    {
+        var sentMessage = await ReplyAsync(message).ConfigureAwait(false);
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay(TimeSpan.FromSeconds(10));
+            await sentMessage.DeleteAsync().ConfigureAwait(false);
+        });
+    }
+
+    private static bool ValidateTradeCode(string code, out string errorMessage)
+    {
+        errorMessage = string.Empty;
+
+        if (code.Length != 8)
+        {
+            errorMessage = "Trade code must be exactly 8 digits long.";
+            return false;
+        }
+
+        if (!Regex.IsMatch(code, @"^\d{8}$"))
+        {
+            errorMessage = "Trade code must contain only digits.";
+            return false;
+        }
+
+        if (QueueModule<T>.IsEasilyGuessableCode(code))
+        {
+            errorMessage = "Trade code is too easy to guess. Please choose a more complex code.";
+            return false;
+        }
+
+        return true;
+    }
+
+    private static bool IsEasilyGuessableCode(string code)
+    {
+        string[] easyPatterns = [
+                @"^(\d)\1{7}$",           // All same digits (e.g., 11111111)
+                @"^12345678$",            // Ascending sequence
+                @"^87654321$",            // Descending sequence
+                @"^(?:01234567|12345678|23456789)$" // Other common sequences
+            ];
+
+        foreach (var pattern in easyPatterns)
+        {
+            if (Regex.IsMatch(code, pattern))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

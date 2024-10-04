@@ -64,6 +64,8 @@ namespace SysBot.Pokemon.Discord
 
         private static readonly Dictionary<ulong, EncounterEchoChannel> EncounterChannels = [];
 
+        private static readonly Dictionary<ulong, EchoChannel> AbuseChannels = [];
+
         public static void RestoreChannels(DiscordSocketClient discord, DiscordSettings cfg)
         {
             Settings = cfg;
@@ -72,8 +74,82 @@ namespace SysBot.Pokemon.Discord
                 if (discord.GetChannel(ch.ID) is ISocketMessageChannel c)
                     AddEchoChannel(c, ch.ID);
             }
+            foreach (var ch in cfg.AbuseLogChannels)
+            {
+                if (discord.GetChannel(ch.ID) is ISocketMessageChannel c)
+                    AddAbuseEchoChannel(c, ch.ID);
+            }
+        }
 
-            // EchoUtil.Echo("Added echo notification to Discord channel(s) on Bot startup.");
+        [Command("AddAbuseEchoChannel")]
+        [Alias("aaec")]
+        [Summary("Makes the bot post abuse logs to the channel.")]
+        [RequireSudo]
+        public async Task AddAbuseEchoAsync()
+        {
+            var c = Context.Channel;
+            var cid = c.Id;
+            if (AbuseChannels.TryGetValue(cid, out _))
+            {
+                await ReplyAsync("Already logging abuse in this channel.").ConfigureAwait(false);
+                return;
+            }
+
+            AddAbuseEchoChannel(c, cid);
+            SysCordSettings.Settings.AbuseLogChannels.AddIfNew([GetReference(Context.Channel)]);
+            await ReplyAsync("Added Abuse Log output to this channel!").ConfigureAwait(false);
+        }
+
+        private static void AddAbuseEchoChannel(ISocketMessageChannel c, ulong cid)
+        {
+            async void l(string msg) => await SendMessageWithRetry(c, msg).ConfigureAwait(false);
+            EchoUtil.AbuseForwarders.Add(l);
+            var entry = new EchoChannel(cid, c.Name, l, null);
+            AbuseChannels.Add(cid, entry);
+        }
+
+        public static bool IsAbuseEchoChannel(ISocketMessageChannel c)
+        {
+            var cid = c.Id;
+            return AbuseChannels.TryGetValue(cid, out _);
+        }
+
+        [Command("RemoveAbuseEchoChannel")]
+        [Alias("raec")]
+        [Summary("Removes the abuse logging from the channel.")]
+        [RequireSudo]
+        public async Task RemoveAbuseEchoAsync()
+        {
+            var id = Context.Channel.Id;
+            if (!AbuseChannels.TryGetValue(id, out var echo))
+            {
+                await ReplyAsync("Not logging abuse in this channel.").ConfigureAwait(false);
+                return;
+            }
+            AbuseChannels.Remove(id);
+            SysCordSettings.Settings.AbuseLogChannels.RemoveAll(z => z.ID == id);
+            await ReplyAsync($"Abuse logging removed from channel: {Context.Channel.Name}").ConfigureAwait(false);
+        }
+
+        [Command("ListAbuseEchoChannels")]
+        [Alias("laec")]
+        [Summary("Lists all channels where abuse logging is enabled.")]
+        [RequireSudo]
+        public async Task ListAbuseEchoChannelsAsync()
+        {
+            if (AbuseChannels.Count == 0)
+            {
+                await ReplyAsync("No channels are currently set up for abuse logging.").ConfigureAwait(false);
+                return;
+            }
+
+            var response = "Abuse logging is enabled in the following channels:\n";
+            foreach (var channel in AbuseChannels.Values)
+            {
+                response += $"- {channel.ChannelName} (ID: {channel.ChannelID})\n";
+            }
+
+            await ReplyAsync(response).ConfigureAwait(false);
         }
 
         [Command("Announce", RunMode = RunMode.Async)]

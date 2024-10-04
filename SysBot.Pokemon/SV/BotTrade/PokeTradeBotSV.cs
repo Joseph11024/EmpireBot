@@ -364,7 +364,7 @@ public class PokeTradeBotSV(PokeTradeHub<PK9> Hub, PokeBotState Config) : PokeRo
         }
 
         // There are several seconds after connection is established before we can dismiss the menu.
-        await Task.Delay(3_000 + config.Timings.ExtraTimeConnectOnline, token).ConfigureAwait(false);
+        await Task.Delay(3_000 + config.Timings.MiscellaneousSettings.ExtraTimeConnectOnline, token).ConfigureAwait(false);
         await Click(A, 1_000, token).ConfigureAwait(false);
         return true;
     }
@@ -720,8 +720,8 @@ public class PokeTradeBotSV(PokeTradeHub<PK9> Hub, PokeBotState Config) : PokeRo
             {
                 if (e.StackTrace != null)
                     Connection.LogError(e.StackTrace);
-                var attempts = Hub.Config.Timings.ReconnectAttempts;
-                var delay = Hub.Config.Timings.ExtraReconnectDelay;
+                var attempts = Hub.Config.Timings.MiscellaneousSettings.ReconnectAttempts;
+                var delay = Hub.Config.Timings.MiscellaneousSettings.ExtraReconnectDelay;
                 var protocol = Config.Connection.Protocol;
                 if (!await TryReconnect(attempts, delay, protocol, token).ConfigureAwait(false))
                     return;
@@ -815,7 +815,7 @@ public class PokeTradeBotSV(PokeTradeHub<PK9> Hub, PokeBotState Config) : PokeRo
                     return PokeTradeResult.RecoverOpenBox;
                 }
             }
-            await Task.Delay(3_000 + Hub.Config.Timings.ExtraTimeOpenBox, token).ConfigureAwait(false);
+            await Task.Delay(3_000 + Hub.Config.Timings.MiscellaneousSettings.ExtraTimeOpenBox, token).ConfigureAwait(false);
 
             var tradePartnerFullInfo = await GetTradePartnerFullInfo(token).ConfigureAwait(false);
             var tradePartner = new TradePartnerSV(tradePartnerFullInfo);
@@ -846,7 +846,7 @@ public class PokeTradeBotSV(PokeTradeHub<PK9> Hub, PokeBotState Config) : PokeRo
                 }
             }
 
-            var partnerCheck = CheckPartnerReputation(this, poke, trainerNID, tradePartner.TrainerName, AbuseSettings, token);
+            var partnerCheck = await CheckPartnerReputation(this, poke, trainerNID, tradePartner.TrainerName, AbuseSettings, token);
             if (partnerCheck != PokeTradeResult.Success)
             {
                 await Click(A, 1_000, token).ConfigureAwait(false); // Ensures we dismiss a popup.
@@ -984,7 +984,7 @@ public class PokeTradeBotSV(PokeTradeHub<PK9> Hub, PokeBotState Config) : PokeRo
         // Always clear Link Codes and enter a new one based on the current trade type
         await Click(X, 1_000, token).ConfigureAwait(false);
         await Click(PLUS, 1_000, token).ConfigureAwait(false);
-        await Task.Delay(Hub.Config.Timings.ExtraTimeOpenCodeEntry, token).ConfigureAwait(false);
+        await Task.Delay(Hub.Config.Timings.MiscellaneousSettings.ExtraTimeOpenCodeEntry, token).ConfigureAwait(false);
 
         var code = poke.Code;
         Log($"Entering Link Trade code: {code:0000 0000}...");
@@ -1060,7 +1060,7 @@ public class PokeTradeBotSV(PokeTradeHub<PK9> Hub, PokeBotState Config) : PokeRo
                 return PokeTradeResult.RecoverOpenBox;
             }
         }
-        await Task.Delay(3_000 + Hub.Config.Timings.ExtraTimeOpenBox, token).ConfigureAwait(false);
+        await Task.Delay(3_000 + Hub.Config.Timings.MiscellaneousSettings.ExtraTimeOpenBox, token).ConfigureAwait(false);
 
         var tradePartnerFullInfo = await GetTradePartnerFullInfo(token).ConfigureAwait(false);
         var tradePartner = new TradePartnerSV(tradePartnerFullInfo);
@@ -1091,7 +1091,7 @@ public class PokeTradeBotSV(PokeTradeHub<PK9> Hub, PokeBotState Config) : PokeRo
             }
         }
 
-        var partnerCheck = CheckPartnerReputation(this, poke, trainerNID, tradePartner.TrainerName, AbuseSettings, token);
+        var partnerCheck = await CheckPartnerReputation(this, poke, trainerNID, tradePartner.TrainerName, AbuseSettings, token);
         if (partnerCheck != PokeTradeResult.Success)
         {
             await Click(A, 1_000, token).ConfigureAwait(false); // Ensures we dismiss a popup.
@@ -1377,7 +1377,7 @@ public class PokeTradeBotSV(PokeTradeHub<PK9> Hub, PokeBotState Config) : PokeRo
                 return false;
             }
         }
-        await Task.Delay(2_000 + Hub.Config.Timings.ExtraTimeLoadPortal, token).ConfigureAwait(false);
+        await Task.Delay(2_000 + Hub.Config.Timings.MiscellaneousSettings.ExtraTimeLoadPortal, token).ConfigureAwait(false);
 
         // Connect online if not already.
         if (!await ConnectToOnline(Hub.Config, token).ConfigureAwait(false))
@@ -1391,7 +1391,7 @@ public class PokeTradeBotSV(PokeTradeHub<PK9> Hub, PokeBotState Config) : PokeRo
         {
             Log("News detected, will close once it's loaded!");
             await Task.Delay(5_000, token).ConfigureAwait(false);
-            await Click(B, 2_000 + Hub.Config.Timings.ExtraTimeLoadPortal, token).ConfigureAwait(false);
+            await Click(B, 2_000 + Hub.Config.Timings.MiscellaneousSettings.ExtraTimeLoadPortal, token).ConfigureAwait(false);
         }
 
         Log("Adjusting the cursor in the Portal.");
