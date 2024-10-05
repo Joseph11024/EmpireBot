@@ -76,6 +76,18 @@ public class TradeCodeStorage
         }
     }
 
+    public bool UpdateTradeCode(ulong trainerID, int newCode)
+    {
+        LoadFromFile();
+        if (_tradeCodeDetails!.TryGetValue(trainerID, out var details))
+        {
+            details.Code = newCode;
+            SaveToFile();
+            return true;
+        }
+        return false;
+    }
+
     private static int GenerateRandomTradeCode()
     {
         var settings = new TradeSettings();

@@ -209,7 +209,7 @@ public class QueueModule<T> : ModuleBase<SocketCommandContext> where T : PKM, ne
         var userID = Context.User.Id;
         var tradeCodeStorage = new TradeCodeStorage();
 
-        if (!QueueModule<T>.ValidateTradeCode(newCode, out string errorMessage))
+        if (!ValidateTradeCode(newCode, out string errorMessage))
         {
             await SendTemporaryMessageAsync(errorMessage).ConfigureAwait(false);
             return;
@@ -218,18 +218,14 @@ public class QueueModule<T> : ModuleBase<SocketCommandContext> where T : PKM, ne
         try
         {
             int code = int.Parse(newCode);
-            var existingDetails = tradeCodeStorage.GetTradeDetails(userID);
-
-            if (existingDetails == null)
+            if (tradeCodeStorage.UpdateTradeCode(userID, code))
+            {
+                await SendTemporaryMessageAsync("Your trade code has been successfully updated.").ConfigureAwait(false);
+            }
+            else
             {
                 await SendTemporaryMessageAsync("You don't have a trade code set. Use the trade command to generate one first.").ConfigureAwait(false);
-                return;
             }
-
-            existingDetails.Code = code;
-            tradeCodeStorage.UpdateTradeDetails(userID, existingDetails.OT, existingDetails.TID, existingDetails.SID);
-
-            await SendTemporaryMessageAsync("Your trade code has been successfully updated.").ConfigureAwait(false);
         }
         catch (Exception ex)
         {
