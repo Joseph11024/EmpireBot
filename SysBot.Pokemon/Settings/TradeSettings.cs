@@ -89,6 +89,9 @@ public class TradeSettings : IBotStateSettings, ICountSettings
         [Category(TradeConfig), Description("Toggle to allow or disallow batch trades."), DisplayName("Allow Batch Trades")]
         public bool AllowBatchTrades { get; set; } = true;
 
+        [Category(TradeConfig), Description("Checks Nickname and OT for spam."), DisplayName("Enable Spam Check")]
+        public bool EnableSpamCheck { get; set; } = true;
+
         [Category(TradeConfig), Description("Maximum pokemons of single trade. Batch mode will be closed if this configuration is less than 1"), DisplayName("Maximum Pokémon per Trade")]
         public int MaxPkmsPerTrade { get; set; } = 1;
 
