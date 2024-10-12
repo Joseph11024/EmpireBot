@@ -1,11 +1,9 @@
 using Discord;
 using Discord.WebSocket;
 using PKHeX.Core;
-using PKHeX.Core.AutoMod;
 using SysBot.Base;
 using SysBot.Pokemon.Helpers;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace SysBot.Pokemon.Discord;
@@ -24,52 +22,27 @@ public static class AutoLegalityExtensionsDiscord
         {
             var template = AutoLegalityWrapper.GetTemplate(set);
             var pkm = sav.GetLegal(template, out var result);
+            if (pkm is PK8 && pkm.Nickname.ToLower() == "egg" && Breeding.CanHatchAsEgg(pkm.Species))
+                TradeExtensions<PK8>.EggTrade(pkm, template);
+            else if (pkm is PB8 && pkm.Nickname.ToLower() == "egg" && Breeding.CanHatchAsEgg(pkm.Species))
+                TradeExtensions<PB8>.EggTrade(pkm, template);
+            else if (pkm is PK9 && pkm.Nickname.ToLower() == "egg" && Breeding.CanHatchAsEgg(pkm.Species))
+                TradeExtensions<PK9>.EggTrade(pkm, template);
+
             var la = new LegalityAnalysis(pkm);
             var spec = GameInfo.Strings.Species[template.Species];
-
             if (!la.Valid)
             {
-                var reason = result switch
-                {
-                    "Timeout" => $"That {spec} set took too long to generate.",
-                    "VersionMismatch" => "Request refused: PKHeX and Auto-Legality Mod version mismatch.",
-                    _ => $"I wasn't able to create a {spec} from that set."
-                };
+                var reason = result == "Timeout" ? $"That {spec} set took too long to generate." : result == "VersionMismatch" ? "Request refused: PKHeX and Auto-Legality Mod version mismatch." : $"I wasn't able to create a {spec} from that set.";
                 var imsg = $"Oops! {reason}";
                 if (result == "Failed")
                     imsg += $"\n{AutoLegalityWrapper.GetLegalizationHint(template, sav, pkm)}";
                 await channel.SendMessageAsync(imsg).ConfigureAwait(false);
                 return;
             }
-            // Specie Img
-            bool canGmax = pkm is PK8 pk8 && pk8.CanGigantamax;
-            var speciesImage = TradeExtensions<PK9>.PokeImg(pkm, canGmax, false);
 
-            // Create RegenTemplate from the legalized PKM
-            var regenTemplate = new RegenTemplate(pkm);
-            var regenText = regenTemplate.Text;
-
-            // Get form name using FormConverter
-            var formNames = FormConverter.GetFormList(pkm.Species, GameInfo.Strings.Types, GameInfo.Strings.forms, new List<string>(), pkm.Context);
-            var formName = pkm.Form > 0 && pkm.Form < formNames.Length ? formNames[pkm.Form] : "";
-
-            // Create species and form string
-            var speciesForm = !string.IsNullOrEmpty(formName) ? $"{spec}-{formName}" : spec;
-            var speciesInfo = $"{speciesForm}\n";
-
-            // Prepend species information to the RegenTemplate
-            regenText = speciesInfo + regenText;
-
-            // Create embed
-            var embed = new EmbedBuilder()
-                .WithThumbnailUrl(speciesImage)
-                .WithTitle($"Legalized RegenTemplate for {speciesForm}")
-                .WithDescription($"Result: {result}\nEncounter: {la.EncounterOriginal.Name}")
-                .AddField("RegenTemplate", $"```{regenText}```")
-                .WithColor(Color.Green)
-                .WithFooter("Copy the RegenTemplate text between the ``` marks to use it.");
-
-            await channel.SendMessageAsync(embed: embed.Build()).ConfigureAwait(false);
+            var msg = $"Here's your ({result}) legalized PKM for {spec} ({la.EncounterOriginal.Name})!";
+            await channel.SendPKMAsync(pkm, msg + $"\n{ReusableActions.GetFormattedShowdownText(pkm)}").ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -105,34 +78,22 @@ public static class AutoLegalityExtensionsDiscord
         }
 
         var pkm = download.Data!;
-        var embed = new EmbedBuilder();
-        embed.Title = $"Legalization Report for {download.SanitizedFileName}";
-        embed.Description = $"{download.SanitizedFileName} analysis and legalization attempt.";
-
         if (new LegalityAnalysis(pkm).Valid)
         {
-            embed.Color = Color.Green;
-            embed.AddField("Status", "Already legal.");
-        }
-        else
-        {
-            var legal = pkm.LegalizePokemon();
-            if (!new LegalityAnalysis(legal).Valid)
-            {
-                embed.Color = Color.Red;
-                embed.AddField("Status", "Unable to legalize.");
-            }
-            else
-            {
-                legal.RefreshChecksum();
-                embed.Color = Color.Green;
-                var msg = $"Here's your legalized PKM for {download.SanitizedFileName}!\n{ReusableActions.GetFormattedShowdownText(legal)}";
-                embed.AddField("Status", "Successfully legalized.");
-                embed.AddField("Details", msg);
-                await channel.SendPKMAsync(legal).ConfigureAwait(false);
-            }
+            await channel.SendMessageAsync($"{download.SanitizedFileName}: Already legal.").ConfigureAwait(false);
+            return;
         }
 
-        await channel.SendMessageAsync(embed: embed.Build()).ConfigureAwait(false);
+        var legal = pkm.LegalizePokemon();
+        if (!new LegalityAnalysis(legal).Valid)
+        {
+            await channel.SendMessageAsync($"{download.SanitizedFileName}: Unable to legalize.").ConfigureAwait(false);
+            return;
+        }
+
+        legal.RefreshChecksum();
+
+        var msg = $"Here's your legalized PKM for {download.SanitizedFileName}!\n{ReusableActions.GetFormattedShowdownText(legal)}";
+        await channel.SendPKMAsync(legal, msg).ConfigureAwait(false);
     }
 }

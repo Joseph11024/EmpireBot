@@ -74,9 +74,6 @@ public class DiscordSettings
 
     public AnnouncementSettingsCategory AnnouncementSettings { get; set; } = new();
 
-    [Category(Startup), Description("Toggle to handle commands asynchronously or synchronously.")]
-    public bool AsyncCommands { get; set; }
-
     [Category(Startup), Description("Indicates the Discord presence status color only considering bots that are Trade-type.")]
     public bool BotColorStatusTradeOnly { get; set; } = true;
 
