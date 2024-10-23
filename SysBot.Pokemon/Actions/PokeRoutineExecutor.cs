@@ -139,8 +139,13 @@ public abstract class PokeRoutineExecutor<T>(IConsoleBotManaged<IConsoleConnecti
         }
     }
 
-    protected async Task<PokeTradeResult> CheckPartnerReputation(PokeRoutineExecutor<T> bot, PokeTradeDetail<T> poke, ulong TrainerNID, string TrainerName,
-        TradeAbuseSettings AbuseSettings, CancellationToken token)
+    protected async Task<PokeTradeResult> CheckPartnerReputation(
+        PokeRoutineExecutor<T> bot,
+        PokeTradeDetail<T> poke,
+        ulong TrainerNID,
+        string TrainerName,
+        TradeAbuseSettings AbuseSettings,
+        CancellationToken token)
     {
         bool quit = false;
         var user = poke.Trainer;
@@ -148,82 +153,121 @@ public abstract class PokeRoutineExecutor<T>(IConsoleBotManaged<IConsoleConnecti
         var useridmsg = isDistribution ? "" : $" (NID: {TrainerNID})";
         var list = isDistribution ? PreviousUsersDistribution : PreviousUsers;
 
-        // Matches to a list of banned NIDs, in case the user ever manages to enter a trade.
+        // Check if the NID is in the banned list
         var entry = AbuseSettings.BannedIDs.List.Find(z => z.ID == TrainerNID);
         if (entry != null)
         {
+            // Block the user if the setting is enabled
             if (AbuseSettings.BlockDetectedBannedUser && bot is PokeRoutineExecutor8SWSH)
                 await BlockUser(token).ConfigureAwait(false);
+
             var msg = $"{user.TrainerName}{useridmsg} is a banned user, and was encountered in-game using OT: {TrainerName}.";
             if (!string.IsNullOrWhiteSpace(entry.Comment))
                 msg += $"\nUser was banned for: {entry.Comment}";
             if (!string.IsNullOrWhiteSpace(AbuseSettings.BannedIDMatchEchoMention))
                 msg = $"{AbuseSettings.BannedIDMatchEchoMention} {msg}";
+
             EchoUtil.EchoAbuseMessage(msg);
             return PokeTradeResult.SuspiciousActivity;
         }
 
-        // Check within the trade type (distribution or non-Distribution).
+        // Check previous trades with this NID
         var previous = list.TryGetPreviousNID(TrainerNID);
         if (previous != null)
         {
-            var delta = DateTime.Now - previous.Time; // Time that has passed since last trade.
+            var delta = DateTime.Now - previous.Time; // Time since last trade
             Log($"Last traded with NID: {TrainerNID} {delta.TotalMinutes:F1} minutes ago (OT: {TrainerName}).");
 
             // Check if the same NID is using a different Discord account
             if (previous.RemoteID != user.ID && user.ID != 0)
             {
-                var msg = $"Detected same NID: {TrainerNID} using different Discord accounts.\n" +
-                          $"Previous: {previous.Name} (Discord ID: {previous.RemoteID})\n" +
-                          $"Current: {user.TrainerName} (Discord ID: {user.ID})";
-                EchoUtil.EchoAbuseMessage(msg);
-
-                if (AbuseSettings.TradeAbuseAction != TradeAbuseAction.Ignore)
+                var abuseExpiration = TimeSpan.FromMinutes(AbuseSettings.TradeAbuseExpiration);
+                if (delta < abuseExpiration)
                 {
-                    if (AbuseSettings.TradeAbuseAction == TradeAbuseAction.BlockAndQuit)
+                    var msg = AbuseSettings.EchoNintendoOnlineIDMulti
+                        ? $"Detected same NID: {TrainerNID} using different Discord accounts.\n"
+                        : "Detected same NID using different Discord accounts.\n";
+
+                    msg += $"Previous: {previous.Name} (Discord ID: {previous.RemoteID})\n" +
+                           $"Current: {user.TrainerName} (Discord ID: {user.ID})";
+
+                    if (!string.IsNullOrWhiteSpace(AbuseSettings.MultiAbuseEchoMention))
+                        msg = $"{AbuseSettings.MultiAbuseEchoMention} {msg}";
+
+                    EchoUtil.EchoAbuseMessage(msg);
+
+                    if (AbuseSettings.TradeAbuseAction != TradeAbuseAction.Ignore)
                     {
-                        await BlockUser(token).ConfigureAwait(false);
-                        AbuseSettings.BannedIDs.AddIfNew(new[] { GetReference(TrainerName, TrainerNID, "Multiple Discord accounts") });
-                        Log($"Added {TrainerNID} to the BannedIDs list for using multiple Discord accounts.");
+                        if (AbuseSettings.TradeAbuseAction == TradeAbuseAction.BlockAndQuit)
+                        {
+                            await BlockUser(token).ConfigureAwait(false);
+                            if (AbuseSettings.BanIDWhenBlockingUser)
+                            {
+                                AbuseSettings.BannedIDs.AddIfNew(new[] { GetReference(TrainerName, TrainerNID, "Multiple Discord accounts") });
+                                Log($"Added {TrainerNID} to the BannedIDs list for using multiple Discord accounts.");
+                            }
+                        }
+                        quit = true;
                     }
-                    quit = true;
                 }
             }
 
             // Cooldown check
             var cd = AbuseSettings.TradeCooldown;
-            if (cd != 0 && TimeSpan.FromMinutes(cd) > delta)
+            if (cd != 0 && delta < TimeSpan.FromMinutes(cd))
             {
                 var wait = TimeSpan.FromMinutes(cd) - delta;
                 poke.Notifier.SendNotification(bot, poke, $"You are still on trade cooldown, and cannot trade for another {wait.TotalMinutes:F1} minute(s).");
-                var msg = $"Found NID: {TrainerNID} (OT: {TrainerName}) ignoring the {cd} minute trade cooldown. Last encountered {delta.TotalMinutes:F1} minutes ago.";
+
+                var msg = AbuseSettings.EchoNintendoOnlineIDCooldown
+                    ? $"Found NID: {TrainerNID} (OT: {TrainerName}) ignoring the {cd} minute trade cooldown. Last encountered {delta.TotalMinutes:F1} minutes ago."
+                    : $"Found user (OT: {TrainerName}) ignoring the {cd} minute trade cooldown. Last encountered {delta.TotalMinutes:F1} minutes ago.";
+
                 if (!string.IsNullOrWhiteSpace(AbuseSettings.CooldownAbuseEchoMention))
                     msg = $"{AbuseSettings.CooldownAbuseEchoMention} {msg}";
+
                 EchoUtil.EchoAbuseMessage(msg);
                 return PokeTradeResult.SuspiciousActivity;
             }
         }
 
-        // For non-Distribution trades, we can optionally flag users sending to multiple in-game players.
+        // Check for users sending to multiple in-game accounts (non-distribution trades)
         if (!isDistribution && user.ID != 0)
         {
             var previous_remote = list.TryGetPreviousRemoteID(user.ID);
             if (previous_remote != null && previous_remote.NetworkID != TrainerNID)
             {
-                var msg = $"Detected Discord ID: {user.ID} trading with different NIDs.\n" +
-                          $"Previous NID: {previous_remote.NetworkID} (OT: {previous_remote.Name})\n" +
-                          $"Current NID: {TrainerNID} (OT: {TrainerName})";
-                EchoUtil.Echo(msg);
+                var delta = DateTime.Now - previous_remote.Time;
+                var abuseExpiration = TimeSpan.FromMinutes(AbuseSettings.TradeAbuseExpiration);
 
-                if (AbuseSettings.TradeAbuseAction != TradeAbuseAction.Ignore)
+                if (delta < abuseExpiration)
                 {
-                    if (AbuseSettings.TradeAbuseAction == TradeAbuseAction.BlockAndQuit)
+                    var msg = AbuseSettings.EchoNintendoOnlineIDMultiRecipients
+                        ? $"Detected Discord ID: {user.ID} trading with different NIDs.\n" +
+                          $"Previous NID: {previous_remote.NetworkID} (OT: {previous_remote.Name})\n" +
+                          $"Current NID: {TrainerNID} (OT: {TrainerName})"
+                        : $"Detected Discord ID: {user.ID} trading with different in-game accounts.\n" +
+                          $"Previous OT: {previous_remote.Name}\n" +
+                          $"Current OT: {TrainerName}";
+
+                    if (!string.IsNullOrWhiteSpace(AbuseSettings.MultiRecipientEchoMention))
+                        msg = $"{AbuseSettings.MultiRecipientEchoMention} {msg}";
+
+                    EchoUtil.EchoAbuseMessage(msg);
+
+                    if (AbuseSettings.TradeAbuseAction != TradeAbuseAction.Ignore)
                     {
-                        await BlockUser(token).ConfigureAwait(false);
-                        AbuseSettings.BannedIDs.AddIfNew(new[] { GetReference(TrainerName, TrainerNID, "Trading with multiple NIDs") });
-                        Log($"Added {TrainerNID} to the BannedIDs list for trading with multiple NIDs.");
+                        if (AbuseSettings.TradeAbuseAction == TradeAbuseAction.BlockAndQuit)
+                        {
+                            await BlockUser(token).ConfigureAwait(false);
+                            if (AbuseSettings.BanIDWhenBlockingUser)
+                            {
+                                AbuseSettings.BannedIDs.AddIfNew(new[] { GetReference(TrainerName, TrainerNID, "Trading with multiple NIDs") });
+                                Log($"Added {TrainerNID} to the BannedIDs list for trading with multiple NIDs.");
+                            }
+                        }
+                        quit = true;
                     }
-                    quit = true;
                 }
             }
         }
