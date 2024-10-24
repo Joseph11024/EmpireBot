@@ -158,11 +158,19 @@ public static class QueueHelper<T> where T : PKM, new()
                 embedBuilder.Footer.IconUrl = "https://raw.githubusercontent.com/bdawg1989/sprites/main/setedited.png";
                 embedBuilder.AddField("**__Notice__**: **Your Showdown Set was Invalid.**", "*Auto Corrected to make legal.*");
             }
-            if (isNonNative)
+            if (isNonNative && pk is not IHomeTrack { HasTracker: true })
             {
                 embedBuilder.Footer.IconUrl = "https://raw.githubusercontent.com/bdawg1989/sprites/main/exclamation.gif";
-                embedBuilder.AddField("**__Notice__**: **This Pokemon is Non-Native.**", "*Cannot enter HOME & AutoOT not applied.*");
+                embedBuilder.AddField("**__Notice__**: **This Pokemon is Non-Native and does not have a HOME tracker.**", "*This Pokemon cannot enter HOME*");
             }
+
+            // If the Pokémon has a HOME tracker, show the HOME Tracker detected message
+            if (pk is IHomeTrack { HasTracker: true })
+            {
+                embedBuilder.Footer.IconUrl = "https://raw.githubusercontent.com/Secludedly/ZE-FusionBot-Sprite-Images/main/exclamation.gif";
+                embedBuilder.AddField("**__Notice__:** HOME Tracker Detected.", "*This Pokemon can enter HOME*");
+            }
+
             DetailsExtractor<T>.AddThumbnails(embedBuilder, type == PokeRoutineType.Clone, type == PokeRoutineType.SeedCheck, embedData.HeldItemUrl);
 
             if (!isHiddenTrade && SysCord<T>.Runner.Config.Trade.TradeEmbedSettings.UseEmbeds)
