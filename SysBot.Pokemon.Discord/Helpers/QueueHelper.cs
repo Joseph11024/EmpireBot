@@ -158,8 +158,31 @@ public static class QueueHelper<T> where T : PKM, new()
                 embedBuilder.Footer.IconUrl = "https://raw.githubusercontent.com/bdawg1989/sprites/main/setedited.png";
                 embedBuilder.AddField("**__Notice__**: **Your Showdown Set was Invalid.**", "*Auto Corrected to make legal.*");
             }
-            if (isNonNative && pk is not IHomeTrack { HasTracker: true })
+            // Check if the Pokemon is Non-Native and/or has a Home Tracker
+            if (pk is IHomeTrack homeTrack)
             {
+                if (homeTrack.HasTracker && isNonNative)
+                {
+                    // Both Non-Native and has Home Tracker
+                    embedBuilder.Footer.IconUrl = "https://raw.githubusercontent.com/bdawg1989/sprites/main/exclamation.gif";
+                    embedBuilder.AddField("**__Notice__**: **This Pokemon is Non-Native & Has Home Tracker.**", "*Cannot enter HOME & AutoOT not applied.*");
+                }
+                else if (homeTrack.HasTracker)
+                {
+                    // Only has Home Tracker
+                    embedBuilder.Footer.IconUrl = "https://raw.githubusercontent.com/bdawg1989/sprites/main/exclamation.gif";
+                    embedBuilder.AddField("**__Notice__**: **Home Tracker Detected.**", "*AutoOT not applied.*");
+                }
+                else if (isNonNative)
+                {
+                    // Only Non-Native
+                    embedBuilder.Footer.IconUrl = "https://raw.githubusercontent.com/bdawg1989/sprites/main/exclamation.gif";
+                    embedBuilder.AddField("**__Notice__**: **This Pokemon is Non-Native.**", "*Cannot enter HOME & AutoOT not applied.*");
+                }
+            }
+            else if (isNonNative)
+            {
+                // Fallback for Non-Native Pokemon that don't implement IHomeTrack
                 embedBuilder.Footer.IconUrl = "https://raw.githubusercontent.com/bdawg1989/sprites/main/exclamation.gif";
                 embedBuilder.AddField("**__Notice__**: **This Pokemon is Non-Native and does not have a HOME tracker.**", "*This Pokemon cannot enter HOME*");
             }

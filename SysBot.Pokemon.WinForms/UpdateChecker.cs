@@ -14,61 +14,38 @@ namespace SysBot.Pokemon.WinForms
 
         private const string RepositoryName = "";
 
-        public static async Task<(bool UpdateAvailable, bool UpdateRequired, string NewVersion)> CheckForUpdatesAsync()
+        public static async Task<(bool UpdateAvailable, bool UpdateRequired, string NewVersion)> CheckForUpdatesAsync(bool forceShow = false)
         {
-#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
-            ReleaseInfo latestRelease = await FetchLatestReleaseAsync();
-#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
+            ReleaseInfo? latestRelease = await FetchLatestReleaseAsync();
 
             bool updateAvailable = latestRelease != null && latestRelease.TagName != TradeBot.Version;
-#pragma warning disable CS8604 // Possible null reference argument.
-            bool updateRequired = latestRelease?.Prerelease == false && IsUpdateRequired(latestRelease.Body);
-#pragma warning restore CS8604 // Possible null reference argument.
+            bool updateRequired = latestRelease?.Prerelease == false && IsUpdateRequired(latestRelease?.Body);
             string? newVersion = latestRelease?.TagName;
 
-            if (updateAvailable)
+            if (updateAvailable || forceShow)
             {
-#pragma warning disable CS8604 // Possible null reference argument.
-                UpdateForm updateForm = new(updateRequired, newVersion);
-#pragma warning restore CS8604 // Possible null reference argument.
+                var updateForm = new UpdateForm(updateRequired, newVersion ?? "", updateAvailable);
                 updateForm.ShowDialog();
             }
 
-#pragma warning disable CS8619 // Nullability of reference types in value doesn't match target type.
-            return (updateAvailable, updateRequired, newVersion);
-#pragma warning restore CS8619 // Nullability of reference types in value doesn't match target type.
+            return (updateAvailable, updateRequired, newVersion ?? string.Empty);
         }
 
         public static async Task<string> FetchChangelogAsync()
         {
-#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
-            ReleaseInfo latestRelease = await FetchLatestReleaseAsync();
-#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
-
-            if (latestRelease == null)
-                return "Failed to fetch the latest release information.";
-
-#pragma warning disable CS8603 // Possible null reference return.
-            return latestRelease.Body;
-#pragma warning restore CS8603 // Possible null reference return.
+            ReleaseInfo? latestRelease = await FetchLatestReleaseAsync();
+            return latestRelease?.Body ?? "Failed to fetch the latest release information.";
         }
 
         public static async Task<string?> FetchDownloadUrlAsync()
         {
-#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
-            ReleaseInfo latestRelease = await FetchLatestReleaseAsync();
-#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
-
-            if (latestRelease == null)
+            ReleaseInfo? latestRelease = await FetchLatestReleaseAsync();
+            if (latestRelease?.Assets == null)
                 return null;
 
-#pragma warning disable CS8604 // Possible null reference argument.
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
-            string? downloadUrl = latestRelease.Assets.Find(a => a.Name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))?.BrowserDownloadUrl;
-#pragma warning restore CS8602 // Dereference of a possibly null reference.
-#pragma warning restore CS8604 // Possible null reference argument.
-
-            return downloadUrl;
+            return latestRelease.Assets
+                .FirstOrDefault(a => a.Name?.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) == true)
+                ?.BrowserDownloadUrl;
         }
 
         private static async Task<ReleaseInfo?> FetchLatestReleaseAsync()
@@ -76,31 +53,29 @@ namespace SysBot.Pokemon.WinForms
             using var client = new HttpClient();
             try
             {
-                // Add a custom header to identify the request
                 client.DefaultRequestHeaders.Add("User-Agent", "MergeBot");
 
-                string releasesUrl = $"http://api.github.com/repos/{RepositoryOwner}/{RepositoryName}/releases/latest";
+                string releasesUrl = $"https://api.github.com/repos/{RepositoryOwner}/{RepositoryName}/releases/latest";
                 HttpResponseMessage response = await client.GetAsync(releasesUrl);
 
                 if (!response.IsSuccessStatusCode)
                 {
+                    string errorContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"GitHub API Error: {response.StatusCode} - {errorContent}");
                     return null;
                 }
 
                 string jsonContent = await response.Content.ReadAsStringAsync();
-#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
-                ReleaseInfo release = JsonConvert.DeserializeObject<ReleaseInfo>(jsonContent);
-#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
-
-                return release;
+                return JsonConvert.DeserializeObject<ReleaseInfo>(jsonContent);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine($"Error fetching release info: {ex.Message}");
                 return null;
             }
         }
 
-        private static bool IsUpdateRequired(string changelogBody)
+        private static bool IsUpdateRequired(string? changelogBody)
         {
             return !string.IsNullOrWhiteSpace(changelogBody) &&
                    changelogBody.Contains("Required = Yes", StringComparison.OrdinalIgnoreCase);

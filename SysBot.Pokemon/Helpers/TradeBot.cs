@@ -2,10 +2,10 @@ namespace SysBot.Pokemon.Helpers
 {
     public static class TradeBot
     {
-        public const string Attribution = "https://notpaldea.net";
+        public const string Attribution = "https://genpkm.com";
 
         public const string ConfigPath = "config.json";
 
-        public const string Version = "v3.3";
+        public const string Version = "v3.4";
     }
 }
